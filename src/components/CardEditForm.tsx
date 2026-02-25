@@ -1,0 +1,224 @@
+'use client';
+
+import { useState } from 'react';
+import { X, Grid3X3, Link, FileText, Loader2, Upload } from 'lucide-react';
+import { useAppStore } from '@/stores/appStore';
+import { apiUploadImage } from '@/lib/api';
+
+export default function CardEditForm() {
+  const { editingCard, setEditingCard, categories, addCard, updateCard, deleteCard } = useAppStore();
+  const [uploading, setUploading] = useState(false);
+  const [formData, setFormData] = useState({
+    title: editingCard?.title || '',
+    description: editingCard?.description || '',
+    cover: editingCard?.cover || '',
+    coverColor: editingCard?.coverColor || '#3B82F6',
+    wanLink: editingCard?.wanLink || '',
+    lanLink: editingCard?.lanLink || '',
+    openInNewWindow: editingCard?.openInNewWindow ?? true,
+    categoryId: editingCard?.categoryId || categories[0]?.id || '',
+  });
+
+  if (!editingCard) return null;
+
+  const isEditing = !!editingCard.id;
+
+  const handleSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!formData.title.trim()) return;
+    if (!formData.wanLink.trim() && !formData.lanLink.trim()) return;
+
+    if (isEditing) {
+      updateCard(editingCard.id, formData);
+    } else {
+      addCard(formData);
+    }
+    setEditingCard(null);
+  };
+
+  const handleDelete = () => {
+    if (confirm('确定要删除这个卡片吗？')) {
+      deleteCard(editingCard.id, editingCard.categoryId);
+      setEditingCard(null);
+    }
+  };
+
+  const onUpload = async (file: File | null) => {
+    if (!file) return;
+    setUploading(true);
+    const url = await apiUploadImage(file);
+    setUploading(false);
+    if (!url) {
+      alert('上传失败，请确认已登录且图片格式正确');
+      return;
+    }
+    setFormData(prev => ({ ...prev, cover: url }));
+  };
+
+  const fieldClassName =
+    'w-full rounded-xl border border-white/15 bg-slate-900/70 px-4 py-2.5 text-slate-100 placeholder:text-slate-500 outline-none transition-all focus:border-cyan-400/70 focus:ring-2 focus:ring-cyan-400/30';
+
+  return (
+    <div className="overflow-hidden rounded-2xl border border-white/15 bg-slate-900/90 shadow-2xl shadow-slate-950/60 backdrop-blur-xl">
+      <div className="flex items-center justify-between border-b border-white/10 bg-slate-900/80 px-6 py-4">
+        <div className="flex items-center gap-2">
+          <Grid3X3 className="h-5 w-5 text-cyan-300" />
+          <h2 className="text-lg font-semibold text-slate-100">{isEditing ? '编辑卡片' : '添加卡片'}</h2>
+        </div>
+        <button
+          onClick={() => setEditingCard(null)}
+          className="rounded-lg p-1 text-slate-300 transition hover:bg-white/10"
+        >
+          <X className="h-5 w-5" />
+        </button>
+      </div>
+
+      <form
+        onSubmit={handleSubmit}
+        className="p-6 space-y-4"
+      >
+        <div>
+          <label className="mb-1 block text-sm font-medium text-slate-200">所属分类</label>
+          <select
+            value={formData.categoryId}
+            onChange={e => setFormData({ ...formData, categoryId: e.target.value })}
+            className={fieldClassName}
+          >
+            {categories.map(cat => (
+              <option
+                key={cat.id}
+                value={cat.id}
+              >
+                {cat.title}
+              </option>
+            ))}
+          </select>
+        </div>
+
+        <div>
+          <label className="mb-1 block text-sm font-medium text-slate-200">卡片名称</label>
+          <input
+            type="text"
+            value={formData.title}
+            onChange={e => setFormData({ ...formData, title: e.target.value })}
+            placeholder="例如：GitHub、Gmail、Dashboard"
+            className={fieldClassName}
+            autoFocus
+          />
+        </div>
+
+        <div>
+          <label className="mb-1 flex items-center gap-1 text-sm font-medium text-slate-200">
+            <Link className="h-4 w-4" />
+            公网地址（WAN）
+          </label>
+          <input
+            type="url"
+            value={formData.wanLink}
+            onChange={e => setFormData({ ...formData, wanLink: e.target.value })}
+            placeholder="https://example.com"
+            className={fieldClassName}
+          />
+        </div>
+
+        <div>
+          <label className="mb-1 flex items-center gap-1 text-sm font-medium text-slate-200">
+            <FileText className="h-4 w-4" />
+            描述（可选）
+          </label>
+          <input
+            type="text"
+            value={formData.description}
+            onChange={e => setFormData({ ...formData, description: e.target.value })}
+            placeholder="简短描述这个链接的用途"
+            className={fieldClassName}
+          />
+        </div>
+
+        <div>
+          <label className="mb-1 flex items-center gap-1 text-sm font-medium text-slate-200">
+            <Link className="h-4 w-4" />
+            内网地址（LAN，可选）
+          </label>
+          <input
+            type="url"
+            value={formData.lanLink}
+            onChange={e => setFormData({ ...formData, lanLink: e.target.value })}
+            placeholder="http://192.168.x.x:3000"
+            className={fieldClassName}
+          />
+        </div>
+
+        <div>
+          <label className="mb-1 block text-sm font-medium text-slate-200">图标 URL（可选）</label>
+          <div className="flex gap-2">
+            <input
+              type="text"
+              value={formData.cover}
+              onChange={e => setFormData({ ...formData, cover: e.target.value })}
+              placeholder="https://... 或 /media/xxx.png"
+              className={fieldClassName}
+            />
+            <label className="inline-flex cursor-pointer items-center gap-2 rounded-xl border border-white/15 bg-white/5 px-3 py-2 text-sm text-slate-200 transition hover:bg-white/10">
+              {uploading ? <Loader2 className="h-4 w-4 animate-spin" /> : <Upload className="h-4 w-4" />}
+              上传
+              <input
+                type="file"
+                accept="image/*"
+                className="hidden"
+                onChange={e => onUpload(e.target.files?.[0] || null)}
+              />
+            </label>
+          </div>
+        </div>
+
+        <div>
+          <label className="mb-1 block text-sm font-medium text-slate-200">图标底色</label>
+          <input
+            type="color"
+            value={formData.coverColor}
+            onChange={e => setFormData({ ...formData, coverColor: e.target.value })}
+            className="h-10 w-24 cursor-pointer rounded-xl border border-white/15 bg-slate-900/70"
+          />
+        </div>
+
+        <label className="flex cursor-pointer items-center gap-2 rounded-xl border border-white/15 bg-slate-900/70 p-3 text-sm text-slate-200">
+          <input
+            type="checkbox"
+            checked={formData.openInNewWindow}
+            onChange={e => setFormData({ ...formData, openInNewWindow: e.target.checked })}
+            className="h-4 w-4 accent-cyan-400"
+          />
+          在新标签页打开
+        </label>
+
+        <div className="flex gap-3 pt-4">
+          {isEditing && (
+            <button
+              type="button"
+              onClick={handleDelete}
+              className="rounded-xl px-4 py-2 text-slate-300 transition-colors hover:bg-rose-500/15 hover:text-rose-200"
+            >
+              删除
+            </button>
+          )}
+          <div className="flex-1"></div>
+          <button
+            type="button"
+            onClick={() => setEditingCard(null)}
+            className="rounded-xl px-4 py-2 text-slate-200 transition-colors hover:bg-white/10"
+          >
+            取消
+          </button>
+          <button
+            type="submit"
+            disabled={!formData.title.trim() || (!formData.wanLink.trim() && !formData.lanLink.trim())}
+            className="px-6 py-2 bg-gradient-to-r from-blue-500 to-indigo-600 text-white rounded-xl hover:shadow-lg hover:shadow-blue-500/25 transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed"
+          >
+            {isEditing ? '保存' : '添加'}
+          </button>
+        </div>
+      </form>
+    </div>
+  );
+}
