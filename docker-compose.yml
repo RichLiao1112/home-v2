@@ -12,7 +12,7 @@ services:
       - MEDIA_DIR=/app/media
     volumes:
       - ./data:/app/data
-      - ./media:/app/media
+      - media_data:/app/media
     expose:
       - "3000"
     healthcheck:
@@ -32,9 +32,12 @@ services:
       - "3132:80"
     volumes:
       - ./nginx/nginx.conf:/etc/nginx/conf.d/default.conf:ro
-      - ./media:/var/www/media:ro
+      - media_data:/var/www/media:ro
     healthcheck:
       test: ["CMD", "wget", "-q", "--spider", "http://localhost/health"]
       interval: 30s
       timeout: 10s
       retries: 3
+
+volumes:
+  media_data:

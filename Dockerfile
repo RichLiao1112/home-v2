@@ -38,6 +38,8 @@ COPY --from=builder --chown=nextjs:nodejs /app/.next/static ./.next/static
 
 # Runtime writable dirs for mounted data/media
 RUN mkdir -p /app/data /app/media && chown -R nextjs:nodejs /app/data /app/media
+# Bundle default static media assets into image
+COPY --from=builder --chown=nextjs:nodejs /app/media/imgs /app/media/imgs
 
 USER nextjs
 
