@@ -194,12 +194,6 @@ export default function CategoryCard({ category }: CategoryCardProps) {
             <GripVertical className="h-4 w-4" />
           </button>
           <h2 className="text-base font-semibold text-slate-100 sm:text-lg">{category.title}</h2>
-          <span
-            className="rounded-full px-2 py-0.5 text-xs font-medium"
-            style={{ backgroundColor: `${category.color}30`, color: category.color }}
-          >
-            {cards.length}
-          </span>
         </div>
 
         <div className="flex items-center gap-1">

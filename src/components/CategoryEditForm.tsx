@@ -133,6 +133,14 @@ export default function CategoryEditForm() {
 
   const fieldClassName =
     'motion-input-focus w-full rounded-xl border border-white/15 bg-slate-900/70 px-4 py-2.5 text-slate-100 placeholder:text-slate-500 outline-none transition-all focus:border-cyan-400/70 focus:ring-2 focus:ring-cyan-400/30';
+  const compactNumberClassName =
+    'motion-input-focus h-8 w-20 rounded-lg border border-white/15 bg-slate-900/70 px-2 text-right text-sm text-slate-100 outline-none';
+
+  const normalizePercent = (value: string, fallback: number) => {
+    const next = Number(value);
+    if (Number.isNaN(next)) return String(fallback);
+    return String(Math.min(100, Math.max(0, Math.round(next))));
+  };
 
   return (
     <div className="overflow-hidden rounded-2xl border border-white/15 bg-slate-900/90 shadow-2xl shadow-slate-950/60 backdrop-blur-xl">
@@ -290,11 +298,24 @@ export default function CategoryEditForm() {
               <p className="text-[11px] text-slate-500">需要在容器环境变量中配置 `UNSPLASH_ACCESS_KEY`。</p>
             </div>
             <div>
-              <label className="mb-1 block text-sm font-medium text-slate-200">
-                导航透明度 ({layoutData.navOpacity}%)
-              </label>
+              <div className="mb-1 flex items-center justify-between gap-2">
+                <label className="text-sm font-medium text-slate-200">导航透明度</label>
+                <div className="flex items-center gap-1 text-slate-300">
+                  <input
+                    type="number"
+                    min={0}
+                    max={100}
+                    step={1}
+                    value={layoutData.navOpacity}
+                    onChange={e => setLayoutData({ ...layoutData, navOpacity: normalizePercent(e.target.value, 62) })}
+                    className={compactNumberClassName}
+                  />
+                  <span className="text-xs">%</span>
+                </div>
+              </div>
               <input
                 type="range"
+                step={1}
                 min={10}
                 max={100}
                 value={layoutData.navOpacity}
@@ -303,11 +324,26 @@ export default function CategoryEditForm() {
               />
             </div>
             <div>
-              <label className="mb-1 block text-sm font-medium text-slate-200">
-                页面遮罩透明度 ({layoutData.overlayOpacity}%)
-              </label>
+              <div className="mb-1 flex items-center justify-between gap-2">
+                <label className="text-sm font-medium text-slate-200">页面遮罩透明度</label>
+                <div className="flex items-center gap-1 text-slate-300">
+                  <input
+                    type="number"
+                    min={0}
+                    max={100}
+                    step={1}
+                    value={layoutData.overlayOpacity}
+                    onChange={e =>
+                      setLayoutData({ ...layoutData, overlayOpacity: normalizePercent(e.target.value, 70) })
+                    }
+                    className={compactNumberClassName}
+                  />
+                  <span className="text-xs">%</span>
+                </div>
+              </div>
               <input
                 type="range"
+                step={1}
                 min={0}
                 max={100}
                 value={layoutData.overlayOpacity}
@@ -316,11 +352,26 @@ export default function CategoryEditForm() {
               />
             </div>
             <div>
-              <label className="mb-1 block text-sm font-medium text-slate-200">
-                分类透明度 ({layoutData.categoryOpacity}%)
-              </label>
+              <div className="mb-1 flex items-center justify-between gap-2">
+                <label className="text-sm font-medium text-slate-200">分类透明度</label>
+                <div className="flex items-center gap-1 text-slate-300">
+                  <input
+                    type="number"
+                    min={0}
+                    max={100}
+                    step={1}
+                    value={layoutData.categoryOpacity}
+                    onChange={e =>
+                      setLayoutData({ ...layoutData, categoryOpacity: normalizePercent(e.target.value, 5) })
+                    }
+                    className={compactNumberClassName}
+                  />
+                  <span className="text-xs">%</span>
+                </div>
+              </div>
               <input
                 type="range"
+                step={1}
                 min={0}
                 max={100}
                 value={layoutData.categoryOpacity}
@@ -329,11 +380,24 @@ export default function CategoryEditForm() {
               />
             </div>
             <div>
-              <label className="mb-1 block text-sm font-medium text-slate-200">
-                卡片透明度 ({layoutData.cardOpacity}%)
-              </label>
+              <div className="mb-1 flex items-center justify-between gap-2">
+                <label className="text-sm font-medium text-slate-200">卡片透明度</label>
+                <div className="flex items-center gap-1 text-slate-300">
+                  <input
+                    type="number"
+                    min={0}
+                    max={100}
+                    step={1}
+                    value={layoutData.cardOpacity}
+                    onChange={e => setLayoutData({ ...layoutData, cardOpacity: normalizePercent(e.target.value, 5) })}
+                    className={compactNumberClassName}
+                  />
+                  <span className="text-xs">%</span>
+                </div>
+              </div>
               <input
                 type="range"
+                step={1}
                 min={0}
                 max={100}
                 value={layoutData.cardOpacity}
