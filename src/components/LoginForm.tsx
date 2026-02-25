@@ -1,6 +1,7 @@
 'use client';
 
-import { useState } from 'react';
+import type { CSSProperties } from 'react';
+import { useEffect, useState } from 'react';
 import { useAuthStore } from '@/stores/authStore';
 import { Home, LockKeyhole, ShieldCheck } from 'lucide-react';
 
@@ -8,7 +9,43 @@ export default function LoginForm() {
   const [password, setPassword] = useState('');
   const [error, setError] = useState('');
   const [pending, setPending] = useState(false);
+  const [site, setSite] = useState({
+    name: 'Home',
+    subtitle: '容器密码登录，关闭浏览器自动退出',
+    backgroundImage: '',
+    overlayOpacity: 70,
+    backgroundBlur: 14,
+  });
   const { login } = useAuthStore();
+
+  useEffect(() => {
+    const key = (typeof window !== 'undefined' && window.localStorage.getItem('home-v2-current-key')) || 'default';
+    fetch(`/api/public/site?key=${encodeURIComponent(key)}`, { cache: 'no-store' })
+      .then(async res => {
+        if (!res.ok) return null;
+        const json = (await res.json()) as {
+          site?: {
+            name?: string;
+            subtitle?: string;
+            backgroundImage?: string;
+            overlayOpacity?: number;
+            backgroundBlur?: number;
+          };
+        };
+        return json.site || null;
+      })
+      .then(nextSite => {
+        if (!nextSite) return;
+        setSite({
+          name: nextSite.name || 'Home',
+          subtitle: nextSite.subtitle || '容器密码登录，关闭浏览器自动退出',
+          backgroundImage: nextSite.backgroundImage || '',
+          overlayOpacity: nextSite.overlayOpacity ?? 70,
+          backgroundBlur: nextSite.backgroundBlur ?? 14,
+        });
+      })
+      .catch(() => undefined);
+  }, []);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -21,8 +58,28 @@ export default function LoginForm() {
     }
   };
 
+  const bgStyle: CSSProperties = site.backgroundImage
+    ? {
+        backgroundImage: `url(${site.backgroundImage})`,
+        backgroundSize: 'cover',
+        backgroundPosition: 'center',
+        backgroundAttachment: 'fixed',
+      }
+    : {};
+
   return (
     <div className="relative min-h-screen overflow-hidden bg-slate-950 px-4 py-10">
+      <div
+        className="absolute inset-0 -z-10"
+        style={bgStyle}
+      />
+      <div
+        className="pointer-events-none absolute inset-0"
+        style={{
+          backgroundColor: `rgba(2, 6, 23, ${Math.min(Math.max(site.overlayOpacity, 0), 100) / 100})`,
+          backdropFilter: `blur(${site.backgroundBlur}px)`,
+        }}
+      />
       <div className="pointer-events-none absolute inset-0">
         <div className="absolute -right-20 -top-20 h-72 w-72 rounded-full bg-indigo-500/25 blur-3xl" />
         <div className="absolute -bottom-20 -left-20 h-72 w-72 rounded-full bg-cyan-500/20 blur-3xl" />
@@ -34,10 +91,10 @@ export default function LoginForm() {
             <div className="mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-2xl bg-gradient-to-br from-indigo-500 to-cyan-500 shadow-lg shadow-indigo-900/30">
               <Home className="h-8 w-8 text-white" />
             </div>
-            <h1 className="mb-2 text-3xl font-bold text-white">Home V2</h1>
+            <h1 className="mb-2 text-3xl font-bold text-white">{site.name}</h1>
             <p className="flex items-center justify-center gap-2 text-slate-200">
               <ShieldCheck className="h-4 w-4" />
-              容器密码登录，关闭浏览器自动退出
+              {site.subtitle || '容器密码登录，关闭浏览器自动退出'}
             </p>
           </div>
 

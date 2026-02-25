@@ -25,6 +25,8 @@ export interface HeadConfig {
   subtitle?: string;
   backgroundImage?: string;
   backgroundBlur?: number;
+  unsplashCollectionId?: string;
+  navOpacity?: number; // 0-100
   overlayOpacity?: number; // 0-100
   categoryOpacity?: number; // 0-100
   cardOpacity?: number; // 0-100
@@ -79,9 +81,11 @@ export const createDefaultData = (): AppData => {
   return {
     layout: {
       head: {
-        name: 'Home V2',
-        subtitle: '现代化导航控制台',
+        name: 'Home',
+        subtitle: '',
         backgroundBlur: 14,
+        unsplashCollectionId: '',
+        navOpacity: 62,
         overlayOpacity: 70,
         categoryOpacity: 5,
         cardOpacity: 5,
@@ -110,9 +114,11 @@ const convertLegacyPayload = (payload: unknown): AppData | null => {
   return {
     layout: {
       head: {
-        name: candidate.layout?.head?.name || 'Home V2',
+        name: candidate.layout?.head?.name || 'Home',
         backgroundImage: candidate.layout?.head?.backgroundImage || '',
         backgroundBlur: candidate.layout?.head?.backgroundBlur ?? 14,
+        unsplashCollectionId: '',
+        navOpacity: 62,
         overlayOpacity: 70,
         categoryOpacity: 5,
         cardOpacity: 5,
@@ -121,10 +127,7 @@ const convertLegacyPayload = (payload: unknown): AppData | null => {
     categories: candidate.categories.map((category, categoryIndex) => ({
       id: category.id || uuidv4(),
       title: category.title || `分类 ${categoryIndex + 1}`,
-      color:
-        category.color ||
-        category.style?.color ||
-        DEFAULT_COLORS[categoryIndex % DEFAULT_COLORS.length],
+      color: category.color || category.style?.color || DEFAULT_COLORS[categoryIndex % DEFAULT_COLORS.length],
       position: category.position ?? categoryIndex,
       cards: (category.cards || []).map((card, cardIndex) => ({
         id: card.id || uuidv4(),
@@ -169,6 +172,8 @@ export const normalizeData = (payload: AppData | Record<string, unknown>): AppDa
       ...(normalizedPayload.layout || createDefaultData().layout),
       head: {
         ...(normalizedPayload.layout?.head || createDefaultData().layout?.head),
+        unsplashCollectionId: normalizedPayload.layout?.head?.unsplashCollectionId || '',
+        navOpacity: normalizedPayload.layout?.head?.navOpacity ?? 62,
         overlayOpacity: normalizedPayload.layout?.head?.overlayOpacity ?? 70,
         categoryOpacity: normalizedPayload.layout?.head?.categoryOpacity ?? 5,
         cardOpacity: normalizedPayload.layout?.head?.cardOpacity ?? 5,

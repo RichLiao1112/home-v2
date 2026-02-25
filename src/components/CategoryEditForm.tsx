@@ -1,8 +1,9 @@
 'use client';
 
-import { useState } from 'react';
-import { X, Folder, Palette, SlidersHorizontal } from 'lucide-react';
+import { useEffect, useState } from 'react';
+import { Image, Search, X, Folder, Palette, SlidersHorizontal } from 'lucide-react';
 import { useAppStore } from '@/stores/appStore';
+import { apiListUnsplashPhotos, apiSearchMedia, apiSearchUnsplashCollections } from '@/lib/api';
 
 const COLORS = [
   '#3B82F6',
@@ -27,14 +28,68 @@ export default function CategoryEditForm() {
     color: editingCategory?.color || COLORS[0],
   });
   const [layoutData, setLayoutData] = useState({
-    name: layout.head?.name || 'Home V2',
+    name: layout.head?.name || 'Home',
     subtitle: layout.head?.subtitle || '',
     backgroundImage: layout.head?.backgroundImage || '',
-    backgroundBlur: String(layout.head?.backgroundBlur ?? 14),
+    unsplashCollectionId: layout.head?.unsplashCollectionId || '',
+    navOpacity: String(layout.head?.navOpacity ?? 62),
     overlayOpacity: String(layout.head?.overlayOpacity ?? 70),
     categoryOpacity: String(layout.head?.categoryOpacity ?? 5),
     cardOpacity: String(layout.head?.cardOpacity ?? 5),
   });
+  const [mediaQuery, setMediaQuery] = useState('');
+  const [mediaLoading, setMediaLoading] = useState(false);
+  const [mediaResults, setMediaResults] = useState<Array<{ name: string; url: string }>>([]);
+  const [unsplashQuery, setUnsplashQuery] = useState('dark abstract');
+  const [unsplashCollections, setUnsplashCollections] = useState<
+    Array<{ id: string; title: string; totalPhotos: number; cover: string }>
+  >([]);
+  const [selectedCollectionId, setSelectedCollectionId] = useState('');
+  const [unsplashPhotos, setUnsplashPhotos] = useState<
+    Array<{ id: string; title: string; thumb: string; regular: string; author: string }>
+  >([]);
+  const savedUnsplashCollectionId = layout.head?.unsplashCollectionId || '';
+
+  useEffect(() => {
+    setMediaLoading(true);
+    apiSearchMedia(mediaQuery)
+      .then(setMediaResults)
+      .finally(() => setMediaLoading(false));
+  }, [mediaQuery, isLayoutMode]);
+
+  const loadUnsplashCollections = async () => {
+    const list = await apiSearchUnsplashCollections(unsplashQuery.trim() || 'wallpaper');
+    setUnsplashCollections(list);
+    if (list[0]) {
+      setSelectedCollectionId(list[0].id);
+      setLayoutData(prev => ({ ...prev, unsplashCollectionId: list[0].id }));
+      const photos = await apiListUnsplashPhotos(list[0].id);
+      setUnsplashPhotos(photos);
+    } else {
+      setSelectedCollectionId('');
+      setUnsplashPhotos([]);
+    }
+  };
+
+  const loadUnsplashPhotos = async (collectionId: string) => {
+    setSelectedCollectionId(collectionId);
+    setLayoutData(prev => ({ ...prev, unsplashCollectionId: collectionId }));
+    const photos = await apiListUnsplashPhotos(collectionId);
+    setUnsplashPhotos(photos);
+  };
+
+  const loadUnsplashBySavedId = async () => {
+    const collectionId = layoutData.unsplashCollectionId.trim();
+    if (!collectionId) return;
+    await loadUnsplashPhotos(collectionId);
+  };
+
+  useEffect(() => {
+    if (!isLayoutMode) return;
+    const collectionId = savedUnsplashCollectionId.trim();
+    if (!collectionId) return;
+    loadUnsplashPhotos(collectionId).catch(() => undefined);
+  }, [isLayoutMode, savedUnsplashCollectionId]);
 
   if (!editingCategory) return null;
 
@@ -46,10 +101,11 @@ export default function CategoryEditForm() {
       updateLayout({
         head: {
           ...layout.head,
-          name: layoutData.name.trim() || 'Home V2',
+          name: layoutData.name.trim() || 'Home',
           subtitle: layoutData.subtitle.trim(),
           backgroundImage: layoutData.backgroundImage.trim(),
-          backgroundBlur: Number(layoutData.backgroundBlur || 0),
+          unsplashCollectionId: layoutData.unsplashCollectionId.trim(),
+          navOpacity: Number(layoutData.navOpacity || 62),
           overlayOpacity: Number(layoutData.overlayOpacity || 70),
           categoryOpacity: Number(layoutData.categoryOpacity || 5),
           cardOpacity: Number(layoutData.cardOpacity || 5),
@@ -76,7 +132,7 @@ export default function CategoryEditForm() {
   };
 
   const fieldClassName =
-    'w-full rounded-xl border border-white/15 bg-slate-900/70 px-4 py-2.5 text-slate-100 placeholder:text-slate-500 outline-none transition-all focus:border-cyan-400/70 focus:ring-2 focus:ring-cyan-400/30';
+    'motion-input-focus w-full rounded-xl border border-white/15 bg-slate-900/70 px-4 py-2.5 text-slate-100 placeholder:text-slate-500 outline-none transition-all focus:border-cyan-400/70 focus:ring-2 focus:ring-cyan-400/30';
 
   return (
     <div className="overflow-hidden rounded-2xl border border-white/15 bg-slate-900/90 shadow-2xl shadow-slate-950/60 backdrop-blur-xl">
@@ -126,22 +182,124 @@ export default function CategoryEditForm() {
             <div>
               <label className="mb-1 block text-sm font-medium text-slate-200">背景图 URL</label>
               <input
-                type="url"
+                type="text"
                 value={layoutData.backgroundImage}
                 onChange={e => setLayoutData({ ...layoutData, backgroundImage: e.target.value })}
                 placeholder="/media/your-file.png"
                 className={fieldClassName}
               />
             </div>
+            <div className="space-y-2 rounded-xl border border-white/10 bg-white/5 p-3">
+              <label className="mb-1 block text-sm font-medium text-slate-200">搜索已上传图片（背景）</label>
+              <div className="flex gap-2">
+                <div className="relative flex-1">
+                  <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-500" />
+                  <input
+                    type="text"
+                    value={mediaQuery}
+                    onChange={e => setMediaQuery(e.target.value)}
+                    placeholder="输入文件名关键词，例如 png / wallpaper"
+                    className={`${fieldClassName} pl-9`}
+                  />
+                </div>
+              </div>
+              <div className="grid max-h-40 grid-cols-4 gap-2 overflow-y-auto">
+                {mediaLoading ? (
+                  <p className="col-span-4 text-xs text-slate-400">搜索中...</p>
+                ) : mediaResults.length === 0 ? (
+                  <p className="col-span-4 text-xs text-slate-400">暂无匹配图片</p>
+                ) : (
+                  mediaResults.map(item => (
+                    <button
+                      type="button"
+                      key={item.url}
+                      onClick={() => setLayoutData({ ...layoutData, backgroundImage: item.url })}
+                      className="motion-btn-hover group overflow-hidden rounded-lg border border-white/15 bg-slate-900/70 text-left"
+                      title={item.name}
+                    >
+                      <img src={item.url} alt={item.name} className="h-14 w-full object-cover" />
+                      <div className="truncate px-2 py-1 text-[10px] text-slate-300">{item.name}</div>
+                    </button>
+                  ))
+                )}
+              </div>
+            </div>
+            <div className="space-y-2 rounded-xl border border-white/10 bg-white/5 p-3">
+              <label className="mb-1 flex items-center gap-2 text-sm font-medium text-slate-200">
+                <Image className="h-4 w-4" />
+                Unsplash 集合背景
+              </label>
+              <div className="flex gap-2">
+                <input
+                  type="text"
+                  value={layoutData.unsplashCollectionId}
+                  onChange={e => setLayoutData({ ...layoutData, unsplashCollectionId: e.target.value })}
+                  placeholder="配置收藏夹 ID，例如 317099"
+                  className={fieldClassName}
+                />
+                <button
+                  type="button"
+                  onClick={loadUnsplashBySavedId}
+                  className="motion-btn-hover whitespace-nowrap rounded-xl border border-white/15 bg-white/10 px-3 text-sm text-slate-200 hover:bg-white/15"
+                >
+                  加载ID
+                </button>
+              </div>
+              <div className="flex gap-2">
+                <input
+                  type="text"
+                  value={unsplashQuery}
+                  onChange={e => setUnsplashQuery(e.target.value)}
+                  placeholder="例如 dark abstract, cyberpunk"
+                  className={fieldClassName}
+                />
+                <button
+                  type="button"
+                  onClick={loadUnsplashCollections}
+                  className="motion-btn-hover whitespace-nowrap rounded-xl border border-white/15 bg-white/10 px-3 text-sm text-slate-200 hover:bg-white/15"
+                >
+                  搜索
+                </button>
+              </div>
+              {unsplashCollections.length > 0 && (
+                <select
+                  value={selectedCollectionId}
+                  onChange={e => loadUnsplashPhotos(e.target.value)}
+                  className={fieldClassName}
+                >
+                  {unsplashCollections.map(item => (
+                    <option key={item.id} value={item.id} className="bg-slate-900 text-slate-100">
+                      {item.title} ({item.totalPhotos})
+                    </option>
+                  ))}
+                </select>
+              )}
+              <div className="grid max-h-44 grid-cols-4 gap-2 overflow-y-auto">
+                {unsplashPhotos.map(photo => (
+                  <button
+                    type="button"
+                    key={photo.id}
+                    onClick={() => setLayoutData({ ...layoutData, backgroundImage: photo.regular })}
+                    className="motion-btn-hover overflow-hidden rounded-lg border border-white/15 bg-slate-900/70"
+                    title={photo.author ? `${photo.title || 'Unsplash'} · ${photo.author}` : photo.title || 'Unsplash'}
+                  >
+                    <img src={photo.thumb} alt={photo.title || 'unsplash'} className="h-14 w-full object-cover" />
+                  </button>
+                ))}
+              </div>
+              <p className="text-[11px] text-slate-500">需要在容器环境变量中配置 `UNSPLASH_ACCESS_KEY`。</p>
+            </div>
             <div>
-              <label className="mb-1 block text-sm font-medium text-slate-200">背景模糊强度</label>
+              <label className="mb-1 block text-sm font-medium text-slate-200">
+                导航透明度 ({layoutData.navOpacity}%)
+              </label>
               <input
-                type="number"
-                min={0}
-                max={40}
-                value={layoutData.backgroundBlur}
-                onChange={e => setLayoutData({ ...layoutData, backgroundBlur: e.target.value })}
-                className={fieldClassName}
+                type="range"
+                min={10}
+                max={100}
+                value={layoutData.navOpacity}
+                onChange={e => setLayoutData({ ...layoutData, navOpacity: e.target.value })}
+                className="w-full accent-cyan-400"
               />
             </div>
             <div>
@@ -227,7 +385,7 @@ export default function CategoryEditForm() {
             <button
               type="button"
               onClick={handleDelete}
-              className="rounded-xl px-4 py-2 text-slate-300 transition-colors hover:bg-rose-500/15 hover:text-rose-200"
+              className="motion-btn-hover whitespace-nowrap rounded-xl px-4 py-2 text-slate-300 transition-colors hover:bg-rose-500/15 hover:text-rose-200"
             >
               删除
             </button>
@@ -236,14 +394,14 @@ export default function CategoryEditForm() {
           <button
             type="button"
             onClick={() => setEditingCategory(null)}
-            className="rounded-xl px-4 py-2 text-slate-200 transition-colors hover:bg-white/10"
+            className="motion-btn-hover whitespace-nowrap rounded-xl px-4 py-2 text-slate-200 transition-colors hover:bg-white/10"
           >
             取消
           </button>
           <button
             type="submit"
             disabled={isLayoutMode ? !layoutData.name.trim() : !formData.title.trim()}
-            className="px-6 py-2 bg-gradient-to-r from-blue-500 to-indigo-600 text-white rounded-xl hover:shadow-lg hover:shadow-blue-500/25 transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed"
+            className="motion-btn-hover whitespace-nowrap rounded-xl bg-gradient-to-r from-blue-500 to-indigo-600 px-6 py-2 text-white hover:shadow-lg hover:shadow-blue-500/25 disabled:cursor-not-allowed disabled:opacity-50"
           >
             保存
           </button>

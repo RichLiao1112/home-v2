@@ -1,13 +1,15 @@
 'use client';
 
-import { useState } from 'react';
-import { X, Grid3X3, Link, FileText, Loader2, Upload } from 'lucide-react';
+import { useEffect, useState } from 'react';
+import { Search, X, Grid3X3, Link, FileText, Loader2, Upload } from 'lucide-react';
 import { useAppStore } from '@/stores/appStore';
-import { apiUploadImage } from '@/lib/api';
+import { apiSearchMedia, apiUploadImage } from '@/lib/api';
 
 export default function CardEditForm() {
   const { editingCard, setEditingCard, categories, addCard, updateCard, deleteCard } = useAppStore();
   const [uploading, setUploading] = useState(false);
+  const [mediaQuery, setMediaQuery] = useState('');
+  const [mediaResults, setMediaResults] = useState<Array<{ name: string; url: string }>>([]);
   const [formData, setFormData] = useState({
     title: editingCard?.title || '',
     description: editingCard?.description || '',
@@ -18,6 +20,10 @@ export default function CardEditForm() {
     openInNewWindow: editingCard?.openInNewWindow ?? true,
     categoryId: editingCard?.categoryId || categories[0]?.id || '',
   });
+
+  useEffect(() => {
+    apiSearchMedia(mediaQuery).then(setMediaResults);
+  }, [mediaQuery]);
 
   if (!editingCard) return null;
 
@@ -56,7 +62,7 @@ export default function CardEditForm() {
   };
 
   const fieldClassName =
-    'w-full rounded-xl border border-white/15 bg-slate-900/70 px-4 py-2.5 text-slate-100 placeholder:text-slate-500 outline-none transition-all focus:border-cyan-400/70 focus:ring-2 focus:ring-cyan-400/30';
+    'motion-input-focus w-full rounded-xl border border-white/15 bg-slate-900/70 px-4 py-2.5 text-slate-100 placeholder:text-slate-500 outline-none transition-all focus:border-cyan-400/70 focus:ring-2 focus:ring-cyan-400/30';
 
   return (
     <div className="overflow-hidden rounded-2xl border border-white/15 bg-slate-900/90 shadow-2xl shadow-slate-950/60 backdrop-blur-xl">
@@ -124,13 +130,13 @@ export default function CardEditForm() {
         <div>
           <label className="mb-1 flex items-center gap-1 text-sm font-medium text-slate-200">
             <FileText className="h-4 w-4" />
-            描述（可选）
+            备注（可选）
           </label>
           <input
             type="text"
             value={formData.description}
             onChange={e => setFormData({ ...formData, description: e.target.value })}
-            placeholder="简短描述这个链接的用途"
+            placeholder="给这个卡片添加备注信息"
             className={fieldClassName}
           />
         </div>
@@ -159,7 +165,7 @@ export default function CardEditForm() {
               placeholder="https://... 或 /media/xxx.png"
               className={fieldClassName}
             />
-            <label className="inline-flex cursor-pointer items-center gap-2 rounded-xl border border-white/15 bg-white/5 px-3 py-2 text-sm text-slate-200 transition hover:bg-white/10">
+            <label className="motion-btn-hover inline-flex cursor-pointer items-center gap-2 whitespace-nowrap rounded-xl border border-white/15 bg-white/5 px-3 py-2 text-sm text-slate-200 transition hover:bg-white/10">
               {uploading ? <Loader2 className="h-4 w-4 animate-spin" /> : <Upload className="h-4 w-4" />}
               上传
               <input
@@ -169,6 +175,36 @@ export default function CardEditForm() {
                 onChange={e => onUpload(e.target.files?.[0] || null)}
               />
             </label>
+          </div>
+          <div className="mt-3 space-y-2 rounded-xl border border-white/10 bg-white/5 p-3">
+            <label className="mb-1 block text-xs text-slate-300">搜索已上传图片（用于图标）</label>
+            <div className="relative">
+              <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-500" />
+              <input
+                type="text"
+                value={mediaQuery}
+                onChange={e => setMediaQuery(e.target.value)}
+                placeholder="按文件名搜索"
+                className={`${fieldClassName} pl-9`}
+              />
+            </div>
+            <div className="grid max-h-40 grid-cols-4 gap-2 overflow-y-auto">
+              {mediaResults.length === 0 ? (
+                <p className="col-span-4 text-xs text-slate-400">暂无匹配图片</p>
+              ) : (
+                mediaResults.map(item => (
+                  <button
+                    key={item.url}
+                    type="button"
+                    onClick={() => setFormData({ ...formData, cover: item.url })}
+                    className="motion-btn-hover overflow-hidden rounded-lg border border-white/15 bg-slate-900/70"
+                    title={item.name}
+                  >
+                    <img src={item.url} alt={item.name} className="h-14 w-full object-cover" />
+                  </button>
+                ))
+              )}
+            </div>
           </div>
         </div>
 
@@ -197,7 +233,7 @@ export default function CardEditForm() {
             <button
               type="button"
               onClick={handleDelete}
-              className="rounded-xl px-4 py-2 text-slate-300 transition-colors hover:bg-rose-500/15 hover:text-rose-200"
+              className="motion-btn-hover whitespace-nowrap rounded-xl px-4 py-2 text-slate-300 transition-colors hover:bg-rose-500/15 hover:text-rose-200"
             >
               删除
             </button>
@@ -206,14 +242,14 @@ export default function CardEditForm() {
           <button
             type="button"
             onClick={() => setEditingCard(null)}
-            className="rounded-xl px-4 py-2 text-slate-200 transition-colors hover:bg-white/10"
+            className="motion-btn-hover whitespace-nowrap rounded-xl px-4 py-2 text-slate-200 transition-colors hover:bg-white/10"
           >
             取消
           </button>
           <button
             type="submit"
             disabled={!formData.title.trim() || (!formData.wanLink.trim() && !formData.lanLink.trim())}
-            className="px-6 py-2 bg-gradient-to-r from-blue-500 to-indigo-600 text-white rounded-xl hover:shadow-lg hover:shadow-blue-500/25 transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed"
+            className="motion-btn-hover whitespace-nowrap rounded-xl bg-gradient-to-r from-blue-500 to-indigo-600 px-6 py-2 text-white hover:shadow-lg hover:shadow-blue-500/25 disabled:cursor-not-allowed disabled:opacity-50"
           >
             {isEditing ? '保存' : '添加'}
           </button>

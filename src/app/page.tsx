@@ -78,7 +78,7 @@ export default function Home() {
       />
       <div className="relative z-10">
       <Header />
-      <main className="mx-auto w-full max-w-7xl px-4 py-6 pb-24 sm:px-6 lg:px-8">
+      <main className="mx-auto w-full max-w-7xl px-4 pb-24 pt-32 sm:px-6 sm:pt-24 lg:px-8">
         {error ? (
           <div className="mb-4 rounded-xl border border-amber-400/30 bg-amber-500/20 px-4 py-3 text-sm text-amber-100">
             {error}

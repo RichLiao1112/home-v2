@@ -9,8 +9,9 @@ export async function GET(req: NextRequest) {
     return NextResponse.json({ success: false, message: '未登录' }, { status: 401 });
   }
 
-  const data = await readAppData();
-  return NextResponse.json({ success: true, data });
+  const key = req.nextUrl.searchParams.get('key') || undefined;
+  const result = await readAppData(key);
+  return NextResponse.json({ success: true, ...result });
 }
 
 export async function PUT(req: NextRequest) {
@@ -20,9 +21,13 @@ export async function PUT(req: NextRequest) {
 
   try {
     const body = await req.json();
+    const key = String(body?.key || '').trim();
+    if (!key) {
+      return NextResponse.json({ success: false, message: '缺少配置 key' }, { status: 400 });
+    }
     const data = normalizeData((body?.data || {}) as AppData);
-    await writeAppData(data);
-    return NextResponse.json({ success: true, data });
+    const result = await writeAppData(key, data);
+    return NextResponse.json({ success: true, ...result });
   } catch {
     return NextResponse.json({ success: false, message: '保存失败，数据格式错误' }, { status: 400 });
   }

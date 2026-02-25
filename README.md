@@ -1,4 +1,4 @@
-# Home V2
+# Home
 
 现代化导航主页（Next.js + Tailwind + Zustand）。
 
@@ -38,7 +38,7 @@ docker compose up -d --build
 - `DATA_DIR`：JSON 数据目录（容器内默认 `/app/data`）
 - `MEDIA_DIR`：媒体目录（容器内默认 `/app/media`）
 
-# Home V2
+# Home
 
 一个现代化的个人导航仪表盘，使用 Next.js + Tailwind CSS + Zustand 构建。
 
@@ -90,10 +90,10 @@ npm start
 
 ## 环境变量
 
-| 变量名 | 说明 | 默认值 |
-|--------|------|--------|
+| 变量名           | 说明     | 默认值     |
+| ---------------- | -------- | ---------- |
 | `LOGIN_PASSWORD` | 登录密码 | `admin123` |
-| `PORT` | 应用端口 | `3000` |
+| `PORT`           | 应用端口 | `3000`     |
 
 ## 项目结构
 
