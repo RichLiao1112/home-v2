@@ -31,7 +31,7 @@ const normalizeDb = (payload: unknown): AppDB => {
   const mapped = Object.fromEntries(
     entries
       .filter(([, value]) => value && typeof value === 'object')
-      .map(([key, value]) => [key, normalizeData({ default: value } as Record<string, unknown>)])
+      .map(([key, value]) => [key, normalizeData(value as AppData | Record<string, unknown>)])
   ) as AppDB;
 
   if (Object.keys(mapped).length === 0) {

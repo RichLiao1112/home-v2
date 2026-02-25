@@ -9,7 +9,6 @@ import {
   Network,
   Plus,
   Trash2,
-  ExternalLink,
   Globe,
 } from 'lucide-react';
 import {
@@ -105,52 +104,53 @@ function SortableCard({
             )}
           </div>
           <div className="min-w-0 flex-1">
-            <h3 className="truncate text-sm font-semibold text-slate-100">{card.title}</h3>
+            <h3 className="truncate text-sm font-semibold text-slate-50 drop-shadow-[0_1px_2px_rgba(2,6,23,0.75)]">
+              {card.title}
+            </h3>
             {card.description ? (
-              <p className="mt-0.5 truncate text-xs text-slate-400">{card.description}</p>
+              <p className="mt-0.5 truncate text-xs text-slate-200/95 drop-shadow-[0_1px_2px_rgba(2,6,23,0.75)]">
+                {card.description}
+              </p>
             ) : null}
           </div>
         </div>
       </button>
 
-      <div className="flex items-center justify-between text-xs text-slate-400">
-        <div className="flex items-center gap-2">
-          <button
-            type="button"
-            disabled={!card.lanLink}
-            onClick={(event) => {
-              event.stopPropagation();
-              onOpenSpecificLink(card.lanLink);
-            }}
-            className={`motion-btn-hover inline-flex items-center gap-1 rounded-full border px-2 py-0.5 ${
-              card.lanLink
-                ? 'border-white/15 text-slate-300 hover:bg-white/10'
-                : 'cursor-not-allowed border-white/10 text-slate-500 opacity-70'
-            }`}
-            aria-label={card.lanLink ? `打开 ${card.title} 的内网地址` : `${card.title} 暂无内网地址`}
-          >
-              <Network className="h-3 w-3" />
-              LAN
-          </button>
-          <button
-            type="button"
-            disabled={!card.wanLink}
-            onClick={(event) => {
-              event.stopPropagation();
-              onOpenSpecificLink(card.wanLink);
-            }}
-            className={`motion-btn-hover inline-flex items-center gap-1 rounded-full border px-2 py-0.5 ${
-              card.wanLink
-                ? 'border-white/15 text-slate-300 hover:bg-white/10'
-                : 'cursor-not-allowed border-white/10 text-slate-500 opacity-70'
-            }`}
-            aria-label={card.wanLink ? `打开 ${card.title} 的公网地址` : `${card.title} 暂无公网地址`}
-          >
-              <Globe className="h-3 w-3" />
-              WAN
-          </button>
-        </div>
-        <ExternalLink className="h-3.5 w-3.5 opacity-70" />
+      <div className="grid grid-cols-1 gap-2">
+        <button
+          type="button"
+          disabled={!card.lanLink}
+          onClick={(event) => {
+            event.stopPropagation();
+            onOpenSpecificLink(card.lanLink);
+          }}
+          className={`motion-btn-hover inline-flex h-10 w-full items-center justify-center gap-1.5 rounded-xl border text-sm font-semibold ${
+            card.lanLink
+              ? 'border-white/25 bg-slate-900/55 text-slate-100 shadow-[inset_0_1px_0_rgba(255,255,255,0.08)] hover:bg-slate-800/70'
+              : 'cursor-not-allowed border-white/10 bg-slate-900/35 text-slate-500 opacity-75'
+          }`}
+          aria-label={card.lanLink ? `打开 ${card.title} 的内网地址` : `${card.title} 暂无内网地址`}
+        >
+          <Network className="h-4 w-4" />
+          LAN
+        </button>
+        <button
+          type="button"
+          disabled={!card.wanLink}
+          onClick={(event) => {
+            event.stopPropagation();
+            onOpenSpecificLink(card.wanLink);
+          }}
+          className={`motion-btn-hover inline-flex h-10 w-full items-center justify-center gap-1.5 rounded-xl border text-sm font-semibold ${
+            card.wanLink
+              ? 'border-white/25 bg-slate-900/55 text-slate-100 shadow-[inset_0_1px_0_rgba(255,255,255,0.08)] hover:bg-slate-800/70'
+              : 'cursor-not-allowed border-white/10 bg-slate-900/35 text-slate-500 opacity-75'
+          }`}
+          aria-label={card.wanLink ? `打开 ${card.title} 的公网地址` : `${card.title} 暂无公网地址`}
+        >
+          <Globe className="h-4 w-4" />
+          WAN
+        </button>
       </div>
     </div>
   );
