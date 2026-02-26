@@ -211,110 +211,6 @@ export default function CategoryEditForm() {
                 className={fieldClassName}
               />
             </div>
-            <div className="space-y-2 rounded-xl border border-white/10 bg-white/5 p-3">
-              <label className="mb-1 block text-sm font-medium text-slate-200">搜索已上传图片（背景）</label>
-              <div className="flex gap-2">
-                <div className="relative flex-1">
-                  <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-500" />
-                  <input
-                    type="text"
-                    value={mediaQuery}
-                    onChange={e => setMediaQuery(e.target.value)}
-                    placeholder="输入文件名关键词，例如 png / wallpaper"
-                    className={`${fieldClassName} pl-9`}
-                  />
-                </div>
-              </div>
-              <div className="grid max-h-40 grid-cols-4 gap-2 overflow-y-auto">
-                {mediaLoading ? (
-                  <p className="col-span-4 text-xs text-slate-400">搜索中...</p>
-                ) : mediaResults.length === 0 ? (
-                  <p className="col-span-4 text-xs text-slate-400">暂无匹配图片</p>
-                ) : (
-                  mediaResults.map(item => (
-                    <button
-                      type="button"
-                      key={item.url}
-                      onClick={() => setLayoutData({ ...layoutData, backgroundImage: item.url })}
-                      className="motion-btn-hover group flex flex-col items-center gap-2 rounded-xl border border-white/15 bg-slate-900/70 p-2 text-left"
-                      title={item.name}
-                    >
-                      <div className="flex h-11 w-11 items-center justify-center rounded-xl bg-slate-800/80 ring-1 ring-white/10">
-                        <img src={item.url} alt={item.name} className="h-7 w-7 rounded object-contain" />
-                      </div>
-                      <div className="w-full truncate text-center text-[10px] text-slate-300">{item.name}</div>
-                    </button>
-                  ))
-                )}
-              </div>
-            </div>
-            <div className="space-y-2 rounded-xl border border-white/10 bg-white/5 p-3">
-              <label className="mb-1 flex items-center gap-2 text-sm font-medium text-slate-200">
-                <Image className="h-4 w-4" />
-                Unsplash 集合背景
-              </label>
-              <div className="flex gap-2">
-                <input
-                  type="text"
-                  value={layoutData.unsplashCollectionId}
-                  onChange={e => setLayoutData({ ...layoutData, unsplashCollectionId: e.target.value })}
-                  placeholder="配置收藏夹 ID，例如 317099"
-                  className={fieldClassName}
-                />
-                <button
-                  type="button"
-                  onClick={loadUnsplashBySavedId}
-                  className="motion-btn-hover whitespace-nowrap rounded-xl border border-white/15 bg-white/10 px-3 text-sm text-slate-200 hover:bg-white/15"
-                >
-                  加载ID
-                </button>
-              </div>
-              <div className="flex gap-2">
-                <input
-                  type="text"
-                  value={unsplashQuery}
-                  onChange={e => setUnsplashQuery(e.target.value)}
-                  placeholder="例如 dark abstract, cyberpunk"
-                  className={fieldClassName}
-                />
-                <button
-                  type="button"
-                  onClick={loadUnsplashCollections}
-                  className="motion-btn-hover whitespace-nowrap rounded-xl border border-white/15 bg-white/10 px-3 text-sm text-slate-200 hover:bg-white/15"
-                >
-                  搜索
-                </button>
-              </div>
-              {unsplashCollections.length > 0 && (
-                <select
-                  value={selectedCollectionId}
-                  onChange={e => loadUnsplashPhotos(e.target.value)}
-                  className={fieldClassName}
-                >
-                  {unsplashCollections.map(item => (
-                    <option key={item.id} value={item.id} className="bg-slate-900 text-slate-100">
-                      {item.title} ({item.totalPhotos})
-                    </option>
-                  ))}
-                </select>
-              )}
-              <div className="grid max-h-44 grid-cols-4 gap-2 overflow-y-auto">
-                {unsplashPhotos.map(photo => (
-                  <button
-                    type="button"
-                    key={photo.id}
-                    onClick={() =>
-                      setLayoutData({ ...layoutData, backgroundImage: photo.full || photo.raw || photo.regular })
-                    }
-                    className="motion-btn-hover overflow-hidden rounded-lg border border-white/15 bg-slate-900/70"
-                    title={photo.author ? `${photo.title || 'Unsplash'} · ${photo.author}` : photo.title || 'Unsplash'}
-                  >
-                    <img src={photo.thumb} alt={photo.title || 'unsplash'} className="h-14 w-full object-contain" />
-                  </button>
-                ))}
-              </div>
-              <p className="text-[11px] text-slate-500">需要在容器环境变量中配置 `UNSPLASH_ACCESS_KEY`。</p>
-            </div>
             <div>
               <div className="mb-1 flex items-center justify-between gap-2">
                 <label className="text-sm font-medium text-slate-200">背景模糊度</label>
@@ -478,6 +374,122 @@ export default function CategoryEditForm() {
                 onChange={e => setLayoutData({ ...layoutData, cardOpacity: e.target.value })}
                 className="w-full accent-cyan-400"
               />
+            </div>
+            <div className="space-y-2 rounded-xl border border-white/10 bg-white/5 p-3">
+              <label className="mb-1 flex items-center gap-2 text-sm font-medium text-slate-200">
+                <Image className="h-4 w-4" />
+                Unsplash 集合背景
+              </label>
+              <div className="flex gap-2">
+                <input
+                  type="text"
+                  value={layoutData.unsplashCollectionId}
+                  onChange={e => setLayoutData({ ...layoutData, unsplashCollectionId: e.target.value })}
+                  placeholder="配置收藏夹 ID，例如 317099"
+                  className={fieldClassName}
+                />
+                <button
+                  type="button"
+                  onClick={loadUnsplashBySavedId}
+                  className="motion-btn-hover whitespace-nowrap rounded-xl border border-white/15 bg-white/10 px-3 text-sm text-slate-200 hover:bg-white/15"
+                >
+                  加载ID
+                </button>
+              </div>
+              <div className="flex gap-2">
+                <input
+                  type="text"
+                  value={unsplashQuery}
+                  onChange={e => setUnsplashQuery(e.target.value)}
+                  placeholder="例如 dark abstract, cyberpunk"
+                  className={fieldClassName}
+                />
+                <button
+                  type="button"
+                  onClick={loadUnsplashCollections}
+                  className="motion-btn-hover whitespace-nowrap rounded-xl border border-white/15 bg-white/10 px-3 text-sm text-slate-200 hover:bg-white/15"
+                >
+                  搜索
+                </button>
+              </div>
+              <div className="min-h-[42px]">
+                {unsplashCollections.length > 0 ? (
+                  <select
+                    value={selectedCollectionId}
+                    onChange={e => loadUnsplashPhotos(e.target.value)}
+                    className={fieldClassName}
+                  >
+                    {unsplashCollections.map(item => (
+                      <option key={item.id} value={item.id} className="bg-slate-900 text-slate-100">
+                        {item.title} ({item.totalPhotos})
+                      </option>
+                    ))}
+                  </select>
+                ) : (
+                  <div className="flex h-[42px] items-center rounded-xl border border-white/10 bg-slate-900/40 px-3 text-xs text-slate-500">
+                    暂无可选集合，先搜索或输入收藏夹 ID。
+                  </div>
+                )}
+              </div>
+              <div className="grid max-h-44 min-h-44 grid-cols-4 gap-2 overflow-y-auto">
+                {unsplashPhotos.length > 0 ? (
+                  unsplashPhotos.map(photo => (
+                    <button
+                      type="button"
+                      key={photo.id}
+                      onClick={() =>
+                        setLayoutData({ ...layoutData, backgroundImage: photo.full || photo.raw || photo.regular })
+                      }
+                      className="motion-btn-hover overflow-hidden rounded-lg border border-white/15 bg-slate-900/70"
+                      title={photo.author ? `${photo.title || 'Unsplash'} · ${photo.author}` : photo.title || 'Unsplash'}
+                    >
+                      <img src={photo.thumb} alt={photo.title || 'unsplash'} className="h-14 w-full object-contain" />
+                    </button>
+                  ))
+                ) : (
+                  <div className="col-span-4 flex items-center justify-center text-xs text-slate-500">
+                    暂无图片，搜索集合或加载指定 ID 后会显示在这里。
+                  </div>
+                )}
+              </div>
+              <p className="text-[11px] text-slate-500">需要在容器环境变量中配置 `UNSPLASH_ACCESS_KEY`。</p>
+            </div>
+            <div className="space-y-2 rounded-xl border border-white/10 bg-white/5 p-3">
+              <label className="mb-1 block text-sm font-medium text-slate-200">搜索已上传图片（背景）</label>
+              <div className="flex gap-2">
+                <div className="relative flex-1">
+                  <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-500" />
+                  <input
+                    type="text"
+                    value={mediaQuery}
+                    onChange={e => setMediaQuery(e.target.value)}
+                    placeholder="输入文件名关键词，例如 png / wallpaper"
+                    className={`${fieldClassName} pl-9`}
+                  />
+                </div>
+              </div>
+              <div className="grid max-h-40 min-h-40 grid-cols-4 gap-2 overflow-y-auto">
+                {mediaLoading ? (
+                  <p className="col-span-4 flex items-center justify-center text-xs text-slate-400">搜索中...</p>
+                ) : mediaResults.length === 0 ? (
+                  <p className="col-span-4 flex items-center justify-center text-xs text-slate-400">暂无匹配图片</p>
+                ) : (
+                  mediaResults.map(item => (
+                    <button
+                      type="button"
+                      key={item.url}
+                      onClick={() => setLayoutData({ ...layoutData, backgroundImage: item.url })}
+                      className="motion-btn-hover group flex flex-col items-center gap-2 rounded-xl border border-white/15 bg-slate-900/70 p-2 text-left"
+                      title={item.name}
+                    >
+                      <div className="flex h-11 w-11 items-center justify-center rounded-xl bg-slate-800/80 ring-1 ring-white/10">
+                        <img src={item.url} alt={item.name} className="h-7 w-7 rounded object-contain" />
+                      </div>
+                      <div className="w-full truncate text-center text-[10px] text-slate-300">{item.name}</div>
+                    </button>
+                  ))
+                )}
+              </div>
             </div>
           </>
         ) : (
