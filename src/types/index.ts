@@ -12,6 +12,25 @@ export interface Card {
   position?: number;
 }
 
+export interface DeletedCategoryItem {
+  recycleId: string;
+  deletedAt: string;
+  data: Category;
+}
+
+export interface DeletedCardItem {
+  recycleId: string;
+  deletedAt: string;
+  sourceCategoryId: string;
+  sourceCategoryTitle: string;
+  data: Card;
+}
+
+export interface RecycleBin {
+  categories: DeletedCategoryItem[];
+  cards: DeletedCardItem[];
+}
+
 export interface Category {
   id: string;
   title: string;
@@ -41,6 +60,7 @@ export interface LayoutConfig {
 export interface AppData {
   categories: Category[];
   layout?: LayoutConfig;
+  recycleBin?: RecycleBin;
   updatedAt?: string;
 }
 
@@ -78,6 +98,23 @@ interface LegacyProfile {
 }
 
 const DEFAULT_COLORS = ['#3B82F6', '#10B981', '#F59E0B', '#8B5CF6', '#EC4899', '#EF4444'];
+const DEFAULT_RECYCLE_RETENTION_DAYS = 30;
+
+const getRecycleRetentionDays = () => {
+  const raw =
+    process.env.NEXT_PUBLIC_RECYCLE_RETENTION_DAYS ||
+    process.env.RECYCLE_RETENTION_DAYS ||
+    String(DEFAULT_RECYCLE_RETENTION_DAYS);
+  const parsed = Number(raw);
+  if (!Number.isFinite(parsed)) return DEFAULT_RECYCLE_RETENTION_DAYS;
+  return Math.min(365, Math.max(1, Math.floor(parsed)));
+};
+
+const isNotExpired = (deletedAt: string, nowMs: number, retentionDays: number) => {
+  const deletedAtMs = Date.parse(deletedAt);
+  if (!Number.isFinite(deletedAtMs)) return true;
+  return nowMs - deletedAtMs <= retentionDays * 24 * 60 * 60 * 1000;
+};
 
 export const createDefaultData = (): AppData => {
   return {
@@ -104,6 +141,10 @@ export const createDefaultData = (): AppData => {
         cards: [],
       },
     ],
+    recycleBin: {
+      categories: [],
+      cards: [],
+    },
     updatedAt: new Date().toISOString(),
   };
 };
@@ -147,6 +188,10 @@ const convertLegacyPayload = (payload: unknown): AppData | null => {
         position: card.position ?? cardIndex,
       })),
     })),
+    recycleBin: {
+      categories: [],
+      cards: [],
+    },
     updatedAt: new Date().toISOString(),
   };
 };
@@ -172,6 +217,53 @@ export const normalizeData = (payload: AppData | Record<string, unknown>): AppDa
       openInNewWindow: card.openInNewWindow ?? true,
     })),
   }));
+  const recycleBin = {
+    categories: Array.isArray(normalizedPayload.recycleBin?.categories)
+      ? normalizedPayload.recycleBin!.categories
+          .filter(item => item && typeof item === 'object')
+          .map(item => ({
+            recycleId: item.recycleId || uuidv4(),
+            deletedAt: item.deletedAt || new Date().toISOString(),
+            data: {
+              ...item.data,
+              id: item.data?.id || uuidv4(),
+              title: item.data?.title || '已删除分类',
+              color: typeof item.data?.color === 'string' ? item.data.color : '',
+              position: item.data?.position ?? 0,
+              cards: (item.data?.cards || []).map((card, cardIndex) => ({
+                ...card,
+                id: card.id || uuidv4(),
+                title: card.title || `卡片 ${cardIndex + 1}`,
+                position: card.position ?? cardIndex,
+                openInNewWindow: card.openInNewWindow ?? true,
+              })),
+            },
+          }))
+      : [],
+    cards: Array.isArray(normalizedPayload.recycleBin?.cards)
+      ? normalizedPayload.recycleBin!.cards
+          .filter(item => item && typeof item === 'object')
+          .map(item => ({
+            recycleId: item.recycleId || uuidv4(),
+            deletedAt: item.deletedAt || new Date().toISOString(),
+            sourceCategoryId: item.sourceCategoryId || '',
+            sourceCategoryTitle: item.sourceCategoryTitle || '未知分类',
+            data: {
+              ...item.data,
+              id: item.data?.id || uuidv4(),
+              title: item.data?.title || '已删除卡片',
+              position: item.data?.position ?? 0,
+              openInNewWindow: item.data?.openInNewWindow ?? true,
+            },
+          }))
+      : [],
+  };
+  const nowMs = Date.now();
+  const retentionDays = getRecycleRetentionDays();
+  const prunedRecycleBin = {
+    categories: recycleBin.categories.filter(item => isNotExpired(item.deletedAt, nowMs, retentionDays)),
+    cards: recycleBin.cards.filter(item => isNotExpired(item.deletedAt, nowMs, retentionDays)),
+  };
 
   return {
     layout: {
@@ -189,6 +281,7 @@ export const normalizeData = (payload: AppData | Record<string, unknown>): AppDa
       },
     },
     categories: categories.length > 0 ? categories : createDefaultData().categories,
+    recycleBin: prunedRecycleBin,
     updatedAt: new Date().toISOString(),
   };
 };

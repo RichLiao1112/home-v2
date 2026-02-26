@@ -20,6 +20,19 @@ const COLORS = [
 ];
 const UNSPLASH_PER_PAGE = 24;
 type UnsplashQuality = 'thumb' | 'regular' | 'full' | 'raw';
+type ImportPreview = {
+  fileName: string;
+  data: AppData;
+  summary: {
+    layoutChanged: boolean;
+    categoryAdded: string[];
+    categoryRemoved: string[];
+    cardAddedCount: number;
+    cardRemovedCount: number;
+    nextCategoryCount: number;
+    nextCardCount: number;
+  };
+};
 
 export default function CategoryEditForm() {
   const {
@@ -31,6 +44,7 @@ export default function CategoryEditForm() {
     layout,
     updateLayout,
     categories,
+    recycleBin,
     currentKey,
     saveData,
     replaceData,
@@ -70,6 +84,7 @@ export default function CategoryEditForm() {
   const [unsplashHasMore, setUnsplashHasMore] = useState(false);
   const [unsplashQuality, setUnsplashQuality] = useState<UnsplashQuality>('full');
   const importInputRef = useRef<HTMLInputElement | null>(null);
+  const [importPreview, setImportPreview] = useState<ImportPreview | null>(null);
   const savedUnsplashCollectionId = layout.head?.unsplashCollectionId || '';
 
   useEffect(() => {
@@ -234,6 +249,7 @@ export default function CategoryEditForm() {
     const payload: AppData = {
       layout,
       categories,
+      recycleBin,
       updatedAt: new Date().toISOString(),
     };
     const exportData = {
@@ -252,6 +268,50 @@ export default function CategoryEditForm() {
     URL.revokeObjectURL(url);
   };
 
+  const buildImportPreview = (fileName: string, data: AppData): ImportPreview => {
+    const currentCategoryTitles = categories.map(category => category.title.trim()).filter(Boolean);
+    const nextCategoryTitles = data.categories.map(category => category.title.trim()).filter(Boolean);
+    const currentCategorySet = new Set(currentCategoryTitles);
+    const nextCategorySet = new Set(nextCategoryTitles);
+
+    const categoryAdded = nextCategoryTitles.filter(title => !currentCategorySet.has(title));
+    const categoryRemoved = currentCategoryTitles.filter(title => !nextCategorySet.has(title));
+
+    const toCardSet = (target: AppData) =>
+      new Set(
+        target.categories.flatMap(category =>
+          category.cards.map(card => `${category.title.trim()}::${(card.title || '').trim()}`.toLowerCase()),
+        ),
+      );
+    const currentCardSet = toCardSet({ layout, categories, updatedAt: new Date().toISOString() });
+    const nextCardSet = toCardSet(data);
+    let cardAddedCount = 0;
+    let cardRemovedCount = 0;
+    nextCardSet.forEach(key => {
+      if (!currentCardSet.has(key)) cardAddedCount += 1;
+    });
+    currentCardSet.forEach(key => {
+      if (!nextCardSet.has(key)) cardRemovedCount += 1;
+    });
+
+    const currentLayoutKey = JSON.stringify(layout.head || {});
+    const nextLayoutKey = JSON.stringify(data.layout?.head || {});
+
+    return {
+      fileName,
+      data,
+      summary: {
+        layoutChanged: currentLayoutKey !== nextLayoutKey,
+        categoryAdded,
+        categoryRemoved,
+        cardAddedCount,
+        cardRemovedCount,
+        nextCategoryCount: data.categories.length,
+        nextCardCount: data.categories.reduce((sum, category) => sum + category.cards.length, 0),
+      },
+    };
+  };
+
   const handleImportSelect = async (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
     if (!file) return;
@@ -263,17 +323,21 @@ export default function CategoryEditForm() {
         window.alert('导入失败：未找到有效配置数据（categories）。');
         return;
       }
-      if (!window.confirm(`确认导入 "${file.name}" 到当前配置（${currentKey}）吗？这会覆盖当前内容。`)) {
-        return;
-      }
-      replaceData(data);
-      await saveData();
-      window.alert('导入成功，已保存到当前配置。');
+      setImportPreview(buildImportPreview(file.name, data));
     } catch {
       window.alert('导入失败：JSON 格式错误或文件不可读。');
     } finally {
       event.target.value = '';
     }
+  };
+
+  const handleConfirmImport = async () => {
+    if (!importPreview) return;
+    if (!window.confirm(`确认导入 "${importPreview.fileName}" 到当前配置（${currentKey}）吗？`)) return;
+    replaceData(importPreview.data);
+    await saveData();
+    setImportPreview(null);
+    window.alert('导入成功，已保存到当前配置。');
   };
 
   return (
@@ -370,6 +434,40 @@ export default function CategoryEditForm() {
                   导入支持三种格式：直接 <code>AppData</code>、<code>{'{ key: AppData }'}</code>、以及系统导出的
                   <code>home-v2-export-v1</code>。
                 </p>
+                {importPreview ? (
+                  <div className="space-y-2 rounded-lg border border-cyan-300/25 bg-cyan-500/10 p-3 text-xs text-slate-100">
+                    <div className="font-medium text-cyan-100">预检结果：{importPreview.fileName}</div>
+                    <div className="grid grid-cols-2 gap-2 text-slate-200">
+                      <div>布局变更：{importPreview.summary.layoutChanged ? '是' : '否'}</div>
+                      <div>分类总数：{importPreview.summary.nextCategoryCount}</div>
+                      <div>卡片总数：{importPreview.summary.nextCardCount}</div>
+                      <div>新增卡片：{importPreview.summary.cardAddedCount}</div>
+                      <div>移除卡片：{importPreview.summary.cardRemovedCount}</div>
+                    </div>
+                    <div className="text-slate-300">
+                      新增分类：{importPreview.summary.categoryAdded.slice(0, 6).join('、') || '无'}
+                    </div>
+                    <div className="text-slate-300">
+                      移除分类：{importPreview.summary.categoryRemoved.slice(0, 6).join('、') || '无'}
+                    </div>
+                    <div className="flex items-center gap-2 pt-1">
+                      <button
+                        type="button"
+                        onClick={() => setImportPreview(null)}
+                        className="motion-btn-hover rounded-md border border-white/15 bg-white/10 px-2.5 py-1 text-xs text-slate-100"
+                      >
+                        取消预览
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => void handleConfirmImport()}
+                        className="motion-btn-hover rounded-md border border-cyan-300/40 bg-cyan-500/20 px-2.5 py-1 text-xs text-cyan-100"
+                      >
+                        确认导入并覆盖
+                      </button>
+                    </div>
+                  </div>
+                ) : null}
                 <input
                   ref={importInputRef}
                   type="file"

@@ -2,7 +2,7 @@
 
 import { create } from 'zustand';
 import { v4 as uuidv4 } from 'uuid';
-import type { AppData, Category, Card, LayoutConfig } from '@/types';
+import type { AppData, Category, Card, LayoutConfig, RecycleBin } from '@/types';
 import { apiCreateConfigKey, apiDeleteConfigKey, apiLoadData, apiSaveData } from '@/lib/api';
 import { createDefaultData, normalizeData } from '@/types';
 
@@ -16,6 +16,7 @@ interface AppState {
   error: string;
   currentKey: string;
   configKeys: string[];
+  recycleBin: RecycleBin;
 
   loadData: (targetKey?: string) => Promise<void>;
   saveData: () => Promise<void>;
@@ -25,6 +26,11 @@ interface AppState {
   setEditingCard: (card: (Card & { categoryId?: string }) | null) => void;
   updateLayout: (layout: Partial<LayoutConfig>) => void;
   replaceData: (data: AppData) => void;
+  restoreDeletedCategory: (recycleId: string) => void;
+  restoreDeletedCard: (recycleId: string) => void;
+  removeDeletedCategory: (recycleId: string) => void;
+  removeDeletedCard: (recycleId: string) => void;
+  clearRecycleBin: () => void;
   addCategory: (category: Omit<Category, 'id' | 'cards'>) => void;
   updateCategory: (id: string, data: Partial<Category>) => void;
   deleteCategory: (id: string) => void;
@@ -52,6 +58,7 @@ const reorderByIds = <T extends { id: string; position?: number }>(
 const toPayload = (state: AppState): AppData => ({
   layout: state.layout,
   categories: state.categories,
+  recycleBin: state.recycleBin,
   updatedAt: new Date().toISOString(),
 });
 
@@ -77,6 +84,7 @@ export const useAppStore = create<AppState>((set, get) => ({
   error: '',
   currentKey: 'default',
   configKeys: ['default'],
+  recycleBin: { categories: [], cards: [] },
 
   loadData: async (targetKey) => {
     set({ isLoading: true, error: '' });
@@ -91,6 +99,7 @@ export const useAppStore = create<AppState>((set, get) => ({
     set({
       layout: normalized.layout || {},
       categories: normalized.categories,
+      recycleBin: normalized.recycleBin || { categories: [], cards: [] },
       currentKey: result.key,
       configKeys: result.keys,
       isLoading: false,
@@ -120,6 +129,7 @@ export const useAppStore = create<AppState>((set, get) => ({
       configKeys: result.keys,
       layout: normalized.layout || {},
       categories: normalized.categories,
+      recycleBin: normalized.recycleBin || { categories: [], cards: [] },
       error: '',
     });
     return true;
@@ -138,6 +148,7 @@ export const useAppStore = create<AppState>((set, get) => ({
       configKeys: result.keys,
       layout: normalized.layout || {},
       categories: normalized.categories,
+      recycleBin: normalized.recycleBin || { categories: [], cards: [] },
       error: '',
     });
     return true;
@@ -155,6 +166,7 @@ export const useAppStore = create<AppState>((set, get) => ({
     set({
       layout: normalized.layout || {},
       categories: normalized.categories,
+      recycleBin: normalized.recycleBin || { categories: [], cards: [] },
       error: '',
     });
   },
@@ -181,11 +193,27 @@ export const useAppStore = create<AppState>((set, get) => ({
   },
 
   deleteCategory: (id) => {
-    set((state) => ({
-      categories: state.categories
-        .filter((it) => it.id !== id)
-        .map((it, index) => ({ ...it, position: index })),
-    }));
+    set((state) => {
+      const target = state.categories.find((it) => it.id === id);
+      if (!target) return state;
+      return {
+        ...state,
+        categories: state.categories
+          .filter((it) => it.id !== id)
+          .map((it, index) => ({ ...it, position: index })),
+        recycleBin: {
+          ...state.recycleBin,
+          categories: [
+            {
+              recycleId: uuidv4(),
+              deletedAt: new Date().toISOString(),
+              data: target,
+            },
+            ...state.recycleBin.categories,
+          ],
+        },
+      };
+    });
   },
 
   addCard: (card) => {
@@ -260,17 +288,43 @@ export const useAppStore = create<AppState>((set, get) => ({
   },
 
   deleteCard: (cardId, categoryId) => {
-    set((state) => ({
-      categories: state.categories.map((category) => {
+    set((state) => {
+      let deletedCard: Card | null = null;
+      let sourceCategoryId = '';
+      let sourceCategoryTitle = '';
+      const nextCategories = state.categories.map((category) => {
         if (categoryId && category.id !== categoryId) return category;
+        const target = category.cards.find((card) => card.id === cardId);
+        if (!target) return category;
+        deletedCard = target;
+        sourceCategoryId = category.id;
+        sourceCategoryTitle = category.title;
         return {
           ...category,
           cards: category.cards
             .filter((card) => card.id !== cardId)
             .map((card, index) => ({ ...card, position: index })),
         };
-      }),
-    }));
+      });
+      if (!deletedCard) return state;
+      return {
+        ...state,
+        categories: nextCategories,
+        recycleBin: {
+          ...state.recycleBin,
+          cards: [
+            {
+              recycleId: uuidv4(),
+              deletedAt: new Date().toISOString(),
+              sourceCategoryId,
+              sourceCategoryTitle,
+              data: deletedCard,
+            },
+            ...state.recycleBin.cards,
+          ],
+        },
+      };
+    });
   },
 
   reorderCategories: (activeId, overId) => {
@@ -282,6 +336,101 @@ export const useAppStore = create<AppState>((set, get) => ({
       categories: state.categories.map((category) =>
         category.id === categoryId ? { ...category, cards: reorderByIds(category.cards, activeId, overId) } : category
       ),
+    }));
+  },
+
+  restoreDeletedCategory: (recycleId) => {
+    set((state) => {
+      const target = state.recycleBin.categories.find(item => item.recycleId === recycleId);
+      if (!target) return state;
+      const hasSameId = state.categories.some(category => category.id === target.data.id);
+      const restored: Category = {
+        ...target.data,
+        id: hasSameId ? uuidv4() : target.data.id,
+        cards: target.data.cards.map((card, index) => ({ ...card, position: index })),
+        position: state.categories.length,
+      };
+      return {
+        ...state,
+        categories: [...state.categories, restored].map((category, index) => ({ ...category, position: index })),
+        recycleBin: {
+          ...state.recycleBin,
+          categories: state.recycleBin.categories.filter(item => item.recycleId !== recycleId),
+        },
+      };
+    });
+  },
+
+  restoreDeletedCard: (recycleId) => {
+    set((state) => {
+      const target = state.recycleBin.cards.find(item => item.recycleId === recycleId);
+      if (!target) return state;
+      let targetCategoryId = target.sourceCategoryId;
+      let categories = state.categories;
+      if (!categories.some(category => category.id === targetCategoryId)) {
+        const fallback = categories[0];
+        if (fallback) {
+          targetCategoryId = fallback.id;
+        } else {
+          const restoredCategory: Category = {
+            id: uuidv4(),
+            title: target.sourceCategoryTitle || '恢复分类',
+            color: '',
+            position: 0,
+            cards: [],
+          };
+          categories = [restoredCategory];
+          targetCategoryId = restoredCategory.id;
+        }
+      }
+
+      const nextCategories = categories.map(category => {
+        if (category.id !== targetCategoryId) return category;
+        const hasSameId = category.cards.some(card => card.id === target.data.id);
+        const restoredCard: Card = {
+          ...target.data,
+          id: hasSameId ? uuidv4() : target.data.id,
+          position: category.cards.length,
+        };
+        return { ...category, cards: [...category.cards, restoredCard] };
+      });
+
+      return {
+        ...state,
+        categories: nextCategories,
+        recycleBin: {
+          ...state.recycleBin,
+          cards: state.recycleBin.cards.filter(item => item.recycleId !== recycleId),
+        },
+      };
+    });
+  },
+
+  removeDeletedCategory: (recycleId) => {
+    set((state) => ({
+      recycleBin: {
+        ...state.recycleBin,
+        categories: state.recycleBin.categories.filter(item => item.recycleId !== recycleId),
+      },
+    }));
+  },
+
+  removeDeletedCard: (recycleId) => {
+    set((state) => ({
+      recycleBin: {
+        ...state.recycleBin,
+        cards: state.recycleBin.cards.filter(item => item.recycleId !== recycleId),
+      },
+    }));
+  },
+
+  clearRecycleBin: () => {
+    set((state) => ({
+      recycleBin: {
+        ...state.recycleBin,
+        categories: [],
+        cards: [],
+      },
     }));
   },
 }));

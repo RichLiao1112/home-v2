@@ -13,7 +13,7 @@ import GlobalSearch from '@/components/GlobalSearch';
 
 export default function Home() {
   const { isAuthenticated, isChecking, checkAuth } = useAuthStore();
-  const { categories, layout, loadData, saveData, isLoading, isSaving, error } = useAppStore();
+  const { categories, layout, recycleBin, loadData, saveData, isLoading, isSaving, error } = useAppStore();
 
   useEffect(() => {
     checkAuth().catch(() => undefined);
@@ -32,7 +32,7 @@ export default function Home() {
       saveData().catch(() => undefined);
     }, 500);
     return () => window.clearTimeout(timer);
-  }, [categories, layout, isAuthenticated, isLoading, saveData]);
+  }, [categories, layout, recycleBin, isAuthenticated, isLoading, saveData]);
 
   if (isChecking) {
     return (
