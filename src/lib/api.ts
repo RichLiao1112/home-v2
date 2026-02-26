@@ -1,5 +1,13 @@
 import type { AppData } from '@/types';
 
+export interface SnapshotMeta {
+  id: string;
+  key: string;
+  createdAt: string;
+  reason: 'manual' | 'auto' | 'before_restore' | 'before_import';
+  note?: string;
+}
+
 export const apiLogin = async (password: string) => {
   const res = await fetch('/api/auth/login', {
     method: 'POST',
@@ -100,4 +108,40 @@ export const apiListUnsplashPhotos = async (collectionId: string) => {
     photos?: Array<{ id: string; title: string; thumb: string; regular: string; full: string; raw: string; author: string }>;
   };
   return json.photos || [];
+};
+
+export const apiListSnapshots = async (key: string) => {
+  const res = await fetch(`/api/snapshots?key=${encodeURIComponent(key)}`, { cache: 'no-store' });
+  if (!res.ok) return [];
+  const json = (await res.json()) as { snapshots?: SnapshotMeta[] };
+  return json.snapshots || [];
+};
+
+export const apiCreateSnapshot = async (key: string, note?: string) => {
+  const res = await fetch('/api/snapshots', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ action: 'create', key, note }),
+  });
+  if (!res.ok) return null;
+  const json = (await res.json()) as { snapshot?: SnapshotMeta; created?: boolean };
+  return { snapshot: json.snapshot, created: Boolean(json.created) };
+};
+
+export const apiRestoreSnapshot = async (key: string, snapshotId: string) => {
+  const res = await fetch('/api/snapshots', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ action: 'restore', key, snapshotId }),
+  });
+  return res.ok;
+};
+
+export const apiDeleteSnapshot = async (key: string, snapshotId: string) => {
+  const res = await fetch('/api/snapshots', {
+    method: 'DELETE',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ key, snapshotId }),
+  });
+  return res.ok;
 };
