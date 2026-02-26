@@ -26,6 +26,7 @@ export interface HeadConfig {
   backgroundImage?: string;
   backgroundBlur?: number;
   unsplashCollectionId?: string;
+  desktopColumns?: number; // 1-8, cards per row on desktop
   navOpacity?: number; // 0-100
   overlayOpacity?: number; // 0-100
   categoryOpacity?: number; // 0-100
@@ -85,6 +86,7 @@ export const createDefaultData = (): AppData => {
         subtitle: '',
         backgroundBlur: 14,
         unsplashCollectionId: '',
+        desktopColumns: 4,
         navOpacity: 62,
         overlayOpacity: 70,
         categoryOpacity: 5,
@@ -118,6 +120,7 @@ const convertLegacyPayload = (payload: unknown): AppData | null => {
         backgroundImage: candidate.layout?.head?.backgroundImage || '',
         backgroundBlur: candidate.layout?.head?.backgroundBlur ?? 14,
         unsplashCollectionId: '',
+        desktopColumns: 4,
         navOpacity: 62,
         overlayOpacity: 70,
         categoryOpacity: 5,
@@ -173,6 +176,7 @@ export const normalizeData = (payload: AppData | Record<string, unknown>): AppDa
       head: {
         ...(normalizedPayload.layout?.head || createDefaultData().layout?.head),
         unsplashCollectionId: normalizedPayload.layout?.head?.unsplashCollectionId || '',
+        desktopColumns: Math.min(Math.max(normalizedPayload.layout?.head?.desktopColumns ?? 4, 1), 8),
         navOpacity: normalizedPayload.layout?.head?.navOpacity ?? 62,
         overlayOpacity: normalizedPayload.layout?.head?.overlayOpacity ?? 70,
         categoryOpacity: normalizedPayload.layout?.head?.categoryOpacity ?? 5,

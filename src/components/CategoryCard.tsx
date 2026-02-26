@@ -24,6 +24,17 @@ interface CategoryCardProps {
   category: Category;
 }
 
+const DESKTOP_GRID_CLASS: Record<number, string> = {
+  1: 'lg:grid-cols-1',
+  2: 'lg:grid-cols-2',
+  3: 'lg:grid-cols-3',
+  4: 'lg:grid-cols-4',
+  5: 'lg:grid-cols-5',
+  6: 'lg:grid-cols-6',
+  7: 'lg:grid-cols-7',
+  8: 'lg:grid-cols-8',
+};
+
 function SortableCard({
   categoryId,
   card,
@@ -157,7 +168,7 @@ function SortableCard({
 }
 
 export default function CategoryCard({ category }: CategoryCardProps) {
-  const { setEditingCategory, setEditingCard, deleteCategory, reorderCards } = useAppStore();
+  const { setEditingCategory, setEditingCard, deleteCategory, reorderCards, layout } = useAppStore();
   const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({
     id: category.id,
   });
@@ -168,6 +179,7 @@ export default function CategoryCard({ category }: CategoryCardProps) {
   };
 
   const cards = category.cards.slice().sort((a, b) => (a.position ?? 0) - (b.position ?? 0));
+  const desktopColumns = Math.min(Math.max(layout.head?.desktopColumns ?? 4, 1), 8);
 
   const onCardDragEnd = (event: DragEndEvent) => {
     const { active, over } = event;
@@ -235,7 +247,7 @@ export default function CategoryCard({ category }: CategoryCardProps) {
 
       <DndContext sensors={sensors} collisionDetection={closestCenter} onDragEnd={onCardDragEnd}>
         <SortableContext items={cards.map((card) => card.id)} strategy={rectSortingStrategy}>
-          <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
+          <div className={`grid grid-cols-1 gap-3 sm:grid-cols-2 ${DESKTOP_GRID_CLASS[desktopColumns]}`}>
             {cards.map((card) => (
               <SortableCard key={card.id} categoryId={category.id} card={card} color={category.color} />
             ))}

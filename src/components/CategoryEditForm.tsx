@@ -32,6 +32,7 @@ export default function CategoryEditForm() {
     subtitle: layout.head?.subtitle || '',
     backgroundImage: layout.head?.backgroundImage || '',
     unsplashCollectionId: layout.head?.unsplashCollectionId || '',
+    desktopColumns: String(layout.head?.desktopColumns ?? 4),
     navOpacity: String(layout.head?.navOpacity ?? 62),
     overlayOpacity: String(layout.head?.overlayOpacity ?? 70),
     categoryOpacity: String(layout.head?.categoryOpacity ?? 5),
@@ -105,6 +106,7 @@ export default function CategoryEditForm() {
           subtitle: layoutData.subtitle.trim(),
           backgroundImage: layoutData.backgroundImage.trim(),
           unsplashCollectionId: layoutData.unsplashCollectionId.trim(),
+          desktopColumns: Math.min(Math.max(Number(layoutData.desktopColumns || 4), 1), 8),
           navOpacity: Number(layoutData.navOpacity || 62),
           overlayOpacity: Number(layoutData.overlayOpacity || 70),
           categoryOpacity: Number(layoutData.categoryOpacity || 5),
@@ -140,6 +142,11 @@ export default function CategoryEditForm() {
     const next = Number(value);
     if (Number.isNaN(next)) return String(fallback);
     return String(Math.min(100, Math.max(0, Math.round(next))));
+  };
+  const normalizeColumns = (value: string, fallback: number) => {
+    const next = Number(value);
+    if (Number.isNaN(next)) return String(fallback);
+    return String(Math.min(8, Math.max(1, Math.round(next))));
   };
 
   return (
@@ -300,6 +307,34 @@ export default function CategoryEditForm() {
                 ))}
               </div>
               <p className="text-[11px] text-slate-500">需要在容器环境变量中配置 `UNSPLASH_ACCESS_KEY`。</p>
+            </div>
+            <div>
+              <div className="mb-1 flex items-center justify-between gap-2">
+                <label className="text-sm font-medium text-slate-200">PC 每行卡片数</label>
+                <div className="flex items-center gap-1 text-slate-300">
+                  <input
+                    type="number"
+                    min={1}
+                    max={8}
+                    step={1}
+                    value={layoutData.desktopColumns}
+                    onChange={e =>
+                      setLayoutData({ ...layoutData, desktopColumns: normalizeColumns(e.target.value, 4) })
+                    }
+                    className={compactNumberClassName}
+                  />
+                  <span className="text-xs">列</span>
+                </div>
+              </div>
+              <input
+                type="range"
+                step={1}
+                min={1}
+                max={8}
+                value={layoutData.desktopColumns}
+                onChange={e => setLayoutData({ ...layoutData, desktopColumns: e.target.value })}
+                className="w-full accent-cyan-400"
+              />
             </div>
             <div>
               <div className="mb-1 flex items-center justify-between gap-2">
