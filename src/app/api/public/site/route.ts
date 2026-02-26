@@ -15,7 +15,7 @@ export async function GET(req: NextRequest) {
       backgroundImage: head.backgroundImage || '',
       overlayOpacity: head.overlayOpacity ?? 70,
       navOpacity: head.navOpacity ?? 62,
-      backgroundBlur: head.backgroundBlur ?? 14,
+      backgroundBlur: head.backgroundBlur ?? 0,
     },
   });
 }

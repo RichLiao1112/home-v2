@@ -84,7 +84,7 @@ export const createDefaultData = (): AppData => {
       head: {
         name: 'Home',
         subtitle: '',
-        backgroundBlur: 14,
+        backgroundBlur: 0,
         unsplashCollectionId: '',
         desktopColumns: 4,
         navOpacity: 62,
@@ -118,7 +118,7 @@ const convertLegacyPayload = (payload: unknown): AppData | null => {
       head: {
         name: candidate.layout?.head?.name || 'Home',
         backgroundImage: candidate.layout?.head?.backgroundImage || '',
-        backgroundBlur: candidate.layout?.head?.backgroundBlur ?? 14,
+        backgroundBlur: candidate.layout?.head?.backgroundBlur ?? 0,
         unsplashCollectionId: '',
         desktopColumns: 4,
         navOpacity: 62,
@@ -175,6 +175,7 @@ export const normalizeData = (payload: AppData | Record<string, unknown>): AppDa
       ...(normalizedPayload.layout || createDefaultData().layout),
       head: {
         ...(normalizedPayload.layout?.head || createDefaultData().layout?.head),
+        backgroundBlur: Math.min(Math.max(normalizedPayload.layout?.head?.backgroundBlur ?? 0, 0), 40),
         unsplashCollectionId: normalizedPayload.layout?.head?.unsplashCollectionId || '',
         desktopColumns: Math.min(Math.max(normalizedPayload.layout?.head?.desktopColumns ?? 4, 1), 8),
         navOpacity: normalizedPayload.layout?.head?.navOpacity ?? 62,

@@ -31,6 +31,7 @@ export default function CategoryEditForm() {
     name: layout.head?.name || 'Home',
     subtitle: layout.head?.subtitle || '',
     backgroundImage: layout.head?.backgroundImage || '',
+    backgroundBlur: String(layout.head?.backgroundBlur ?? 0),
     unsplashCollectionId: layout.head?.unsplashCollectionId || '',
     desktopColumns: String(layout.head?.desktopColumns ?? 4),
     navOpacity: String(layout.head?.navOpacity ?? 62),
@@ -105,6 +106,7 @@ export default function CategoryEditForm() {
           name: layoutData.name.trim() || 'Home',
           subtitle: layoutData.subtitle.trim(),
           backgroundImage: layoutData.backgroundImage.trim(),
+          backgroundBlur: Math.min(Math.max(Number(layoutData.backgroundBlur || 0), 0), 40),
           unsplashCollectionId: layoutData.unsplashCollectionId.trim(),
           desktopColumns: Math.min(Math.max(Number(layoutData.desktopColumns || 4), 1), 8),
           navOpacity: Number(layoutData.navOpacity || 62),
@@ -147,6 +149,11 @@ export default function CategoryEditForm() {
     const next = Number(value);
     if (Number.isNaN(next)) return String(fallback);
     return String(Math.min(8, Math.max(1, Math.round(next))));
+  };
+  const normalizeBlur = (value: string, fallback: number) => {
+    const next = Number(value);
+    if (Number.isNaN(next)) return String(fallback);
+    return String(Math.min(40, Math.max(0, Math.round(next))));
   };
 
   return (
@@ -307,6 +314,34 @@ export default function CategoryEditForm() {
                 ))}
               </div>
               <p className="text-[11px] text-slate-500">需要在容器环境变量中配置 `UNSPLASH_ACCESS_KEY`。</p>
+            </div>
+            <div>
+              <div className="mb-1 flex items-center justify-between gap-2">
+                <label className="text-sm font-medium text-slate-200">背景模糊度</label>
+                <div className="flex items-center gap-1 text-slate-300">
+                  <input
+                    type="number"
+                    min={0}
+                    max={40}
+                    step={1}
+                    value={layoutData.backgroundBlur}
+                    onChange={e =>
+                      setLayoutData({ ...layoutData, backgroundBlur: normalizeBlur(e.target.value, 0) })
+                    }
+                    className={compactNumberClassName}
+                  />
+                  <span className="text-xs">px</span>
+                </div>
+              </div>
+              <input
+                type="range"
+                step={1}
+                min={0}
+                max={40}
+                value={layoutData.backgroundBlur}
+                onChange={e => setLayoutData({ ...layoutData, backgroundBlur: e.target.value })}
+                className="w-full accent-cyan-400"
+              />
             </div>
             <div>
               <div className="mb-1 flex items-center justify-between gap-2">

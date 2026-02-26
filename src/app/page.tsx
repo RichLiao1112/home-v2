@@ -72,10 +72,10 @@ export default function Home() {
       }
     >
       <div
-        className="fixed inset-0 z-0 backdrop-blur-[2px]"
+        className="fixed inset-0 z-0"
         style={{
           backgroundColor: `rgba(2, 6, 23, ${pageOverlayOpacity / 100})`,
-          backdropFilter: `blur(${layout.head?.backgroundBlur ?? 14}px)`,
+          backdropFilter: `blur(${layout.head?.backgroundBlur ?? 0}px)`,
         }}
       />
       <div className="relative z-10">

@@ -14,7 +14,7 @@ export default function LoginForm() {
     subtitle: '容器密码登录，关闭浏览器自动退出',
     backgroundImage: '',
     overlayOpacity: 70,
-    backgroundBlur: 14,
+    backgroundBlur: 0,
   });
   const { login } = useAuthStore();
 
@@ -45,7 +45,7 @@ export default function LoginForm() {
           subtitle: nextSite.subtitle || '容器密码登录，关闭浏览器自动退出',
           backgroundImage: nextSite.backgroundImage || '',
           overlayOpacity: nextSite.overlayOpacity ?? 70,
-          backgroundBlur: nextSite.backgroundBlur ?? 14,
+          backgroundBlur: nextSite.backgroundBlur ?? 0,
         });
       })
       .catch(() => undefined);
