@@ -253,7 +253,8 @@ export const restoreSnapshot = async (targetKey: string, snapshotId: string) => 
     return { success: false, message: '快照不存在' };
   }
 
-  await pushSnapshot(current.key, current.data, 'before_restore', `恢复前自动快照 ${new Date().toLocaleString()}`);
+  const nowText = new Date().toLocaleString('zh-CN', { timeZone: 'Asia/Shanghai', hour12: false });
+  await pushSnapshot(current.key, current.data, 'before_restore', `恢复前自动快照 ${nowText}`);
   const restored = await writeAppData(current.key, match.data);
   return { success: true, ...restored };
 };

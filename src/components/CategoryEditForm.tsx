@@ -3,7 +3,7 @@
 import { useEffect, useRef, useState } from 'react';
 import { Download, Image, Search, Upload, X, Folder, Palette, SlidersHorizontal } from 'lucide-react';
 import { useAppStore } from '@/stores/appStore';
-import { apiListUnsplashPhotos, apiSearchMedia, apiSearchUnsplashCollections } from '@/lib/api';
+import { apiCreateSnapshot, apiListUnsplashPhotos, apiSearchMedia, apiSearchUnsplashCollections } from '@/lib/api';
 import { normalizeData, type AppData } from '@/types';
 
 const COLORS = [
@@ -334,6 +334,16 @@ export default function CategoryEditForm() {
   const handleConfirmImport = async () => {
     if (!importPreview) return;
     if (!window.confirm(`确认导入 "${importPreview.fileName}" 到当前配置（${currentKey}）吗？`)) return;
+    const nowText = new Date().toLocaleString('zh-CN', { timeZone: 'Asia/Shanghai', hour12: false });
+    const backup = await apiCreateSnapshot(
+      currentKey,
+      `导入前自动备份 ${nowText}`,
+      'before_import',
+    );
+    if (!backup) {
+      window.alert('导入前自动快照创建失败，已终止导入。');
+      return;
+    }
     replaceData(importPreview.data);
     await saveData();
     setImportPreview(null);

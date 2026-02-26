@@ -23,7 +23,9 @@ export async function POST(req: NextRequest) {
 
     if (action === 'create') {
       const note = String(body?.note || '').trim();
-      const result = await createSnapshot(key, 'manual', note || undefined);
+      const reasonRaw = String(body?.reason || '').trim();
+      const reason = reasonRaw === 'before_import' ? 'before_import' : 'manual';
+      const result = await createSnapshot(key, reason, note || undefined);
       return NextResponse.json({ success: true, ...result });
     }
 

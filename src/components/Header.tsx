@@ -59,6 +59,12 @@ export default function Header() {
   const [recycleTimeFilter, setRecycleTimeFilter] = useState<RecycleTimeFilter>('all');
   const [canUsePortal, setCanUsePortal] = useState(false);
 
+  const formatBeijingTime = (value: string | number | Date) =>
+    new Date(value).toLocaleString('zh-CN', {
+      timeZone: 'Asia/Shanghai',
+      hour12: false,
+    });
+
   const loadSnapshots = useCallback(async () => {
     setSnapshotLoading(true);
     const list = await apiListSnapshots(currentKey);
@@ -141,7 +147,7 @@ export default function Header() {
   };
 
   const handleCreateSnapshot = async () => {
-    const nowText = new Date().toLocaleString();
+    const nowText = formatBeijingTime(new Date());
     const note = window.prompt('快照备注（可选）', `手动快照 ${nowText}`);
     if (note === null) return;
     setSnapshotBusy(true);
@@ -236,7 +242,7 @@ export default function Header() {
                     >
                       <div className="min-w-0">
                         <div className="truncate text-sm text-slate-100">
-                          {new Date(item.createdAt).toLocaleString()}
+                          {formatBeijingTime(item.createdAt)}
                         </div>
                         <div className="truncate text-xs text-slate-400">
                           {formatSnapshotReason(item.reason)}

@@ -123,11 +123,15 @@ export const apiListSnapshots = async (key: string) => {
   return json.snapshots || [];
 };
 
-export const apiCreateSnapshot = async (key: string, note?: string) => {
+export const apiCreateSnapshot = async (
+  key: string,
+  note?: string,
+  reason: 'manual' | 'before_import' = 'manual',
+) => {
   const res = await fetch('/api/snapshots', {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ action: 'create', key, note }),
+    body: JSON.stringify({ action: 'create', key, note, reason }),
   });
   if (!res.ok) return null;
   const json = (await res.json()) as { snapshot?: SnapshotMeta; created?: boolean };
