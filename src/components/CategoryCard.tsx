@@ -69,11 +69,11 @@ function SortableCard({
     <div
       ref={setNodeRef}
       style={style}
-      className={`group/card surface-card relative rounded-2xl border border-white/15 p-4 backdrop-blur-lg transition ${
+      className={`group/card surface-card relative rounded-xl border border-white/15 p-3 backdrop-blur-lg transition sm:rounded-2xl sm:p-4 ${
         isDragging ? 'z-20 shadow-lg shadow-cyan-900/40' : 'hover:border-cyan-300/30'
       }`}
     >
-      <div className="absolute right-2 top-2 flex items-center gap-1 opacity-0 transition group-hover/card:opacity-100">
+      <div className="absolute right-1.5 top-1.5 flex items-center gap-0.5 opacity-0 transition group-hover/card:opacity-100 sm:right-2 sm:top-2 sm:gap-1">
         <button
           {...attributes}
           {...listeners}
@@ -103,23 +103,23 @@ function SortableCard({
         className="block w-full cursor-pointer text-left"
         aria-label={`打开 ${card.title}`}
       >
-        <div className="mb-3 flex items-center gap-3">
+        <div className="mb-2.5 flex items-center gap-2.5 sm:mb-3 sm:gap-3">
           <div
-            className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl text-white"
+            className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg text-white sm:h-11 sm:w-11 sm:rounded-xl"
             style={{ backgroundColor: card.coverColor || color }}
           >
             {card.cover ? (
-              <img src={card.cover} alt={`${card.title} 图标`} className="h-7 w-7 rounded object-contain" />
+              <img src={card.cover} alt={`${card.title} 图标`} className="h-6 w-6 rounded object-contain sm:h-7 sm:w-7" />
             ) : (
-              <Link2 className="h-5 w-5" />
+              <Link2 className="h-4 w-4 sm:h-5 sm:w-5" />
             )}
           </div>
           <div className="min-w-0 flex-1">
-            <h3 className="truncate text-sm font-semibold text-slate-50 drop-shadow-[0_1px_2px_rgba(2,6,23,0.75)]">
+            <h3 className="truncate text-xs font-semibold text-slate-50 drop-shadow-[0_1px_2px_rgba(2,6,23,0.75)] sm:text-sm">
               {card.title}
             </h3>
             {card.description ? (
-              <p className="mt-0.5 truncate text-xs text-slate-200/95 drop-shadow-[0_1px_2px_rgba(2,6,23,0.75)]">
+              <p className="mt-0.5 truncate text-[11px] text-slate-200/95 drop-shadow-[0_1px_2px_rgba(2,6,23,0.75)] sm:text-xs">
                 {card.description}
               </p>
             ) : null}
@@ -127,7 +127,7 @@ function SortableCard({
         </div>
       </button>
 
-      <div className="grid grid-cols-1 gap-2">
+      <div className="grid grid-cols-1 gap-1.5 sm:gap-2">
         <button
           type="button"
           disabled={!card.lanLink}
@@ -135,14 +135,14 @@ function SortableCard({
             event.stopPropagation();
             onOpenSpecificLink(card.lanLink);
           }}
-          className={`motion-btn-hover inline-flex h-10 w-full items-center justify-center gap-1.5 rounded-xl border text-sm font-semibold ${
+          className={`motion-btn-hover inline-flex h-8 w-full items-center justify-center gap-1 rounded-lg border text-xs font-semibold sm:h-10 sm:gap-1.5 sm:rounded-xl sm:text-sm ${
             card.lanLink
               ? 'border-white/25 bg-slate-900/55 text-slate-100 shadow-[inset_0_1px_0_rgba(255,255,255,0.08)] hover:bg-slate-800/70'
               : 'cursor-not-allowed border-white/10 bg-slate-900/35 text-slate-500 opacity-75'
           }`}
           aria-label={card.lanLink ? `打开 ${card.title} 的内网地址` : `${card.title} 暂无内网地址`}
         >
-          <Network className="h-4 w-4" />
+          <Network className="h-3.5 w-3.5 sm:h-4 sm:w-4" />
           LAN
         </button>
         <button
@@ -152,14 +152,14 @@ function SortableCard({
             event.stopPropagation();
             onOpenSpecificLink(card.wanLink);
           }}
-          className={`motion-btn-hover inline-flex h-10 w-full items-center justify-center gap-1.5 rounded-xl border text-sm font-semibold ${
+          className={`motion-btn-hover inline-flex h-8 w-full items-center justify-center gap-1 rounded-lg border text-xs font-semibold sm:h-10 sm:gap-1.5 sm:rounded-xl sm:text-sm ${
             card.wanLink
               ? 'border-white/25 bg-slate-900/55 text-slate-100 shadow-[inset_0_1px_0_rgba(255,255,255,0.08)] hover:bg-slate-800/70'
               : 'cursor-not-allowed border-white/10 bg-slate-900/35 text-slate-500 opacity-75'
           }`}
           aria-label={card.wanLink ? `打开 ${card.title} 的公网地址` : `${card.title} 暂无公网地址`}
         >
-          <Globe className="h-4 w-4" />
+          <Globe className="h-3.5 w-3.5 sm:h-4 sm:w-4" />
           WAN
         </button>
       </div>
