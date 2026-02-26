@@ -1,9 +1,10 @@
 'use client';
 
-import { useEffect, useState } from 'react';
-import { Image, Search, X, Folder, Palette, SlidersHorizontal } from 'lucide-react';
+import { useEffect, useRef, useState } from 'react';
+import { Download, Image, Search, Upload, X, Folder, Palette, SlidersHorizontal } from 'lucide-react';
 import { useAppStore } from '@/stores/appStore';
 import { apiListUnsplashPhotos, apiSearchMedia, apiSearchUnsplashCollections } from '@/lib/api';
+import { normalizeData, type AppData } from '@/types';
 
 const COLORS = [
   '#3B82F6',
@@ -21,8 +22,19 @@ const UNSPLASH_PER_PAGE = 24;
 type UnsplashQuality = 'thumb' | 'regular' | 'full' | 'raw';
 
 export default function CategoryEditForm() {
-  const { editingCategory, setEditingCategory, addCategory, updateCategory, deleteCategory, layout, updateLayout } =
-    useAppStore();
+  const {
+    editingCategory,
+    setEditingCategory,
+    addCategory,
+    updateCategory,
+    deleteCategory,
+    layout,
+    updateLayout,
+    categories,
+    currentKey,
+    saveData,
+    replaceData,
+  } = useAppStore();
   const isLayoutMode = editingCategory?.id === 'layout-settings' || editingCategory?.title === '__layout__';
 
   const [formData, setFormData] = useState({
@@ -57,6 +69,7 @@ export default function CategoryEditForm() {
   const [unsplashLoading, setUnsplashLoading] = useState(false);
   const [unsplashHasMore, setUnsplashHasMore] = useState(false);
   const [unsplashQuality, setUnsplashQuality] = useState<UnsplashQuality>('full');
+  const importInputRef = useRef<HTMLInputElement | null>(null);
   const savedUnsplashCollectionId = layout.head?.unsplashCollectionId || '';
 
   useEffect(() => {
@@ -185,6 +198,84 @@ export default function CategoryEditForm() {
     return byQuality[quality].find(Boolean) || '';
   };
 
+  const extractImportData = (payload: unknown): AppData | null => {
+    if (!payload || typeof payload !== 'object' || Array.isArray(payload)) return null;
+    const root = payload as Record<string, unknown>;
+
+    // Support exported structure: { version, key, data: AppData }
+    if (root.data && typeof root.data === 'object' && !Array.isArray(root.data)) {
+      const data = root.data as Record<string, unknown>;
+      if (Array.isArray(data.categories)) {
+        return normalizeData(data as unknown as AppData);
+      }
+    }
+
+    // Support direct AppData JSON
+    if (Array.isArray(root.categories)) {
+      return normalizeData(root as unknown as AppData);
+    }
+
+    // Support AppDB-like JSON: { key1: AppData, key2: AppData }
+    const fromCurrentKey = root[currentKey];
+    if (fromCurrentKey && typeof fromCurrentKey === 'object' && !Array.isArray(fromCurrentKey)) {
+      const data = fromCurrentKey as Record<string, unknown>;
+      if (Array.isArray(data.categories)) return normalizeData(data as unknown as AppData);
+    }
+
+    for (const value of Object.values(root)) {
+      if (!value || typeof value !== 'object' || Array.isArray(value)) continue;
+      const data = value as Record<string, unknown>;
+      if (Array.isArray(data.categories)) return normalizeData(data as unknown as AppData);
+    }
+    return null;
+  };
+
+  const handleExport = () => {
+    const payload: AppData = {
+      layout,
+      categories,
+      updatedAt: new Date().toISOString(),
+    };
+    const exportData = {
+      version: 'home-v2-export-v1',
+      exportedAt: new Date().toISOString(),
+      key: currentKey,
+      data: payload,
+    };
+    const content = JSON.stringify(exportData, null, 2);
+    const blob = new Blob([content], { type: 'application/json;charset=utf-8' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `home-v2-${currentKey}-${new Date().toISOString().slice(0, 19).replace(/[:T]/g, '-')}.json`;
+    a.click();
+    URL.revokeObjectURL(url);
+  };
+
+  const handleImportSelect = async (event: React.ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0];
+    if (!file) return;
+    try {
+      const text = await file.text();
+      const parsed = JSON.parse(text) as unknown;
+      const data = extractImportData(parsed);
+      if (!data) {
+        window.alert('导入失败：未找到有效配置数据（categories）。');
+        return;
+      }
+      if (!window.confirm(`确认导入 "${file.name}" 到当前配置（${currentKey}）吗？这会覆盖当前内容。`)) {
+        return;
+      }
+      replaceData(data);
+      await saveData();
+      window.alert('导入成功，已保存到当前配置。');
+    } catch {
+      window.alert('导入失败：JSON 格式错误或文件不可读。');
+    } finally {
+      event.target.value = '';
+    }
+  };
+
   return (
     <div
       className={`overflow-hidden rounded-2xl border border-white/15 bg-slate-900/90 shadow-2xl shadow-slate-950/60 backdrop-blur-xl ${
@@ -253,6 +344,40 @@ export default function CategoryEditForm() {
                   onChange={e => setLayoutData({ ...layoutData, backgroundImage: e.target.value })}
                   placeholder="/media/your-file.png"
                   className={fieldClassName}
+                />
+              </div>
+              <div className="space-y-2 rounded-xl border border-white/10 bg-white/5 p-3">
+                <label className="mb-1 block text-sm font-medium text-slate-200">配置导入/导出（带校验）</label>
+                <div className="flex flex-wrap items-center gap-2">
+                  <button
+                    type="button"
+                    onClick={handleExport}
+                    className="motion-btn-hover inline-flex h-9 items-center gap-2 rounded-xl border border-white/15 bg-white/10 px-3 text-xs text-slate-100 hover:bg-white/15"
+                  >
+                    <Download className="h-3.5 w-3.5" />
+                    导出当前配置
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => importInputRef.current?.click()}
+                    className="motion-btn-hover inline-flex h-9 items-center gap-2 rounded-xl border border-white/15 bg-white/10 px-3 text-xs text-slate-100 hover:bg-white/15"
+                  >
+                    <Upload className="h-3.5 w-3.5" />
+                    导入并覆盖当前配置
+                  </button>
+                </div>
+                <p className="text-[11px] text-slate-500">
+                  导入支持三种格式：直接 <code>AppData</code>、<code>{'{ key: AppData }'}</code>、以及系统导出的
+                  <code>home-v2-export-v1</code>。
+                </p>
+                <input
+                  ref={importInputRef}
+                  type="file"
+                  accept=".json,application/json"
+                  onChange={event => {
+                    void handleImportSelect(event);
+                  }}
+                  className="hidden"
                 />
               </div>
               <div>

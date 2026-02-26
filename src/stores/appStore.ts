@@ -24,6 +24,7 @@ interface AppState {
   setEditingCategory: (category: Category | null) => void;
   setEditingCard: (card: (Card & { categoryId?: string }) | null) => void;
   updateLayout: (layout: Partial<LayoutConfig>) => void;
+  replaceData: (data: AppData) => void;
   addCategory: (category: Omit<Category, 'id' | 'cards'>) => void;
   updateCategory: (id: string, data: Partial<Category>) => void;
   deleteCategory: (id: string) => void;
@@ -147,6 +148,15 @@ export const useAppStore = create<AppState>((set, get) => ({
 
   updateLayout: (layout) => {
     set((state) => ({ layout: { ...state.layout, ...layout } }));
+  },
+
+  replaceData: (data) => {
+    const normalized = normalizeData(data);
+    set({
+      layout: normalized.layout || {},
+      categories: normalized.categories,
+      error: '',
+    });
   },
 
   addCategory: (category) => {
