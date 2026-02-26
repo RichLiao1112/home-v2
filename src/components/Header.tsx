@@ -1,16 +1,33 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useCallback, useEffect, useState } from 'react';
 import type { CSSProperties } from 'react';
+import { usePathname, useRouter, useSearchParams } from 'next/navigation';
 import { useAuthStore } from '@/stores/authStore';
 import { useAppStore } from '@/stores/appStore';
 import { KeyRound, LayoutPanelTop, LogOut, Plus, Sparkles, Trash2 } from 'lucide-react';
 
 export default function Header() {
+  const router = useRouter();
+  const pathname = usePathname();
+  const searchParams = useSearchParams();
   const { logout } = useAuthStore();
   const { setEditingCategory, categories, layout, currentKey, configKeys, loadData, createConfigKey, deleteConfigKey } =
     useAppStore();
   const [isScrolled, setIsScrolled] = useState(false);
+
+  const updateUrlKey = useCallback((key: string) => {
+    const params = new URLSearchParams(searchParams.toString());
+    params.set('key', key);
+    const query = params.toString();
+    router.replace(query ? `${pathname}?${query}` : pathname, { scroll: false });
+  }, [pathname, router, searchParams]);
+
+  const handleSelectKey = (key: string) => {
+    if (!key || key === currentKey) return;
+    updateUrlKey(key);
+    void loadData(key);
+  };
 
   const handleCreateKey = async () => {
     const value = window.prompt('输入新的配置 key（例如 office / home / demo）');
@@ -29,6 +46,12 @@ export default function Header() {
     window.addEventListener('scroll', onScroll, { passive: true });
     return () => window.removeEventListener('scroll', onScroll);
   }, []);
+
+  useEffect(() => {
+    if (!currentKey) return;
+    if (searchParams.get('key') === currentKey) return;
+    updateUrlKey(currentKey);
+  }, [currentKey, searchParams, updateUrlKey]);
 
   const navOpacityFromConfig = Math.min(Math.max(layout.head?.navOpacity ?? 62, 10), 100);
   const baseOpacity = navOpacityFromConfig / 100;
@@ -92,7 +115,7 @@ export default function Header() {
               <KeyRound className="h-4 w-4 text-slate-300" />
               <select
                 value={currentKey}
-                onChange={event => loadData(event.target.value)}
+                onChange={event => handleSelectKey(event.target.value)}
                 className="motion-input-focus w-24 rounded-lg border border-transparent bg-transparent px-2 py-1 text-xs text-slate-200 outline-none sm:w-auto"
                 aria-label="切换配置 key"
               >
@@ -151,7 +174,7 @@ export default function Header() {
             <KeyRound className="pointer-events-none absolute left-2.5 top-1/2 h-3.5 w-3.5 -translate-y-1/2 text-slate-400" />
             <select
               value={currentKey}
-              onChange={event => loadData(event.target.value)}
+              onChange={event => handleSelectKey(event.target.value)}
               className="motion-input-focus h-9 w-full rounded-xl border border-white/15 bg-white/5 pl-7 pr-2 text-xs text-slate-200 outline-none"
               aria-label="切换配置 key（移动端）"
             >
