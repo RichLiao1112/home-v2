@@ -107,6 +107,62 @@ docker compose up -d --build
 - Service Worker：`public/sw.js`
 - 离线兜底页：`public/offline.html`
 
+## 生产部署 Checklist
+
+部署前：
+
+- [ ] 确认 `main` 分支已包含最新提交
+- [ ] 准备 `.env`（至少配置 `LOGIN_PASSWORD`、`AUTH_SECRET`）
+- [ ] 若使用 Unsplash，确认 `UNSPLASH_ACCESS_KEY` 可用
+- [ ] 准备挂载目录：`./data`、`./assets`
+- [ ] 确认宿主机端口未被占用（默认 `3131`）
+
+环境变量（建议）：
+
+- [ ] `LOGIN_PASSWORD` 使用强密码
+- [ ] `AUTH_SECRET` 使用随机长串（至少 32 字符）
+- [ ] `AUTH_SESSION_MAX_AGE_SECONDS` 按需求设置
+- [ ] `SNAPSHOT_MAX_PER_KEY` 按存储策略设置
+- [ ] `NEXT_PUBLIC_RECYCLE_RETENTION_DAYS` 按保留策略设置
+
+构建与启动：
+
+- [ ] `docker compose pull`（可选，更新基础镜像）
+- [ ] `docker compose up -d --build`
+- [ ] `docker compose ps` 确认容器 `healthy`
+- [ ] 首次启动后确认 `/app/data/home.json` 已创建（或挂载文件可读写）
+
+发布后验证：
+
+- [ ] 页面可访问：`http://<host>:3131`
+- [ ] 可正常登录并读取配置
+- [ ] 修改配置后刷新仍保留（持久化生效）
+- [ ] 上传图片后可通过 `/media/*` 访问并在搜索中出现
+- [ ] 快照创建/恢复正常，时间显示为北京时间
+- [ ] 搜索命令面板（`/` 或 `Ctrl+K`）可用
+
+Jenkins（如使用）：
+
+- [ ] Job 使用仓库最新代码
+- [ ] 构建步骤包含 `docker build` 或 `docker compose build`
+- [ ] 部署步骤包含停止旧容器并启动新容器
+- [ ] 通过 Jenkins 注入环境变量（不要把密钥写死在仓库）
+- [ ] 挂载参数与生产一致：`data/home.json`、`assets`
+
+回滚预案：
+
+- [ ] 部署前手动创建一次快照（或备份 `data/home.json`）
+- [ ] 若发布异常，可先在 UI 内“快照恢复”
+- [ ] 容器级回滚：切回上一镜像 tag 并重启
+- [ ] 回滚后验证登录、配置读取、静态资源访问
+
+常见排障：
+
+- [ ] 页面可开但图片 404：检查 `assets` 挂载与 Nginx 路径
+- [ ] 登录异常：检查 `LOGIN_PASSWORD` 与 `AUTH_SECRET` 是否一致传入
+- [ ] 配置未持久化：检查 `data/home.json` 挂载是否可写
+- [ ] Unsplash 无结果：检查 `UNSPLASH_ACCESS_KEY` 与网络连通性
+
 ## 技术栈
 
 - 框架：Next.js 14 / React 18
