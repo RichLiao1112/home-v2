@@ -8,6 +8,8 @@ import { useAppStore } from '@/stores/appStore';
 import { KeyRound, LayoutPanelTop, LogOut, Plus, Sparkles, Trash2 } from 'lucide-react';
 
 export default function Header() {
+  const SCROLL_ENTER_Y = 40;
+  const SCROLL_EXIT_Y = 16;
   const router = useRouter();
   const { logout } = useAuthStore();
   const { setEditingCategory, categories, layout, currentKey, configKeys, loadData, createConfigKey, deleteConfigKey } =
@@ -39,10 +41,24 @@ export default function Header() {
   };
 
   useEffect(() => {
-    const onScroll = () => setIsScrolled(window.scrollY > 24);
-    onScroll();
+    let rafId = 0;
+    const updateScrolledState = () => {
+      rafId = 0;
+      const y = window.scrollY;
+      setIsScrolled(prev => (prev ? y > SCROLL_EXIT_Y : y > SCROLL_ENTER_Y));
+    };
+
+    const onScroll = () => {
+      if (rafId) return;
+      rafId = window.requestAnimationFrame(updateScrolledState);
+    };
+
+    updateScrolledState();
     window.addEventListener('scroll', onScroll, { passive: true });
-    return () => window.removeEventListener('scroll', onScroll);
+    return () => {
+      window.removeEventListener('scroll', onScroll);
+      if (rafId) window.cancelAnimationFrame(rafId);
+    };
   }, []);
 
   useEffect(() => {
@@ -63,14 +79,12 @@ export default function Header() {
 
   return (
     <header
-      className={`fixed inset-x-0 top-0 z-50 border-b backdrop-blur-xl transition-all duration-200 ${
+      className={`fixed inset-x-0 top-0 z-50 border-b backdrop-blur-xl transition-all duration-300 ease-out ${
         isScrolled ? 'shadow-xl shadow-slate-950/35' : 'shadow-lg shadow-slate-950/20'
       }`}
       style={headerStyle}
     >
-      <div
-        className={`mx-auto w-full max-w-[1720px] px-4 sm:px-6 lg:px-8 ${isScrolled ? 'py-2.5 sm:py-3' : 'py-3 sm:py-4'}`}
-      >
+      <div className="mx-auto w-full max-w-[1720px] px-4 py-3 sm:px-6 sm:py-3.5 lg:px-8">
         <div className="flex items-center justify-between gap-3">
           <div className="flex min-w-0 items-center gap-3">
             <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-gradient-to-br from-indigo-500 to-cyan-500 shadow-lg shadow-indigo-900/30">
