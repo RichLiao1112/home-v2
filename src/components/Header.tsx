@@ -13,6 +13,7 @@ import {
   apiRestoreSnapshot,
   type SnapshotMeta,
 } from '@/lib/api';
+import { lockBodyScroll, unlockBodyScroll } from '@/lib/scroll-lock';
 import {
   ArchiveRestore,
   History,
@@ -145,6 +146,13 @@ export default function Header() {
       window.removeEventListener(OPEN_RECYCLE_EVENT, onOpenRecycle);
     };
   }, []);
+
+  useEffect(() => {
+    const isOverlayOpen = snapshotOpen || recycleOpen;
+    if (!isOverlayOpen) return;
+    lockBodyScroll();
+    return () => unlockBodyScroll();
+  }, [recycleOpen, snapshotOpen]);
 
   useEffect(() => {
     let rafId = 0;

@@ -1,13 +1,22 @@
 'use client';
 
+import { useEffect } from 'react';
 import { useAppStore } from '@/stores/appStore';
 import CategoryEditForm from './CategoryEditForm';
 import CardEditForm from './CardEditForm';
+import { lockBodyScroll, unlockBodyScroll } from '@/lib/scroll-lock';
 
 export default function EditModal() {
   const { editingCategory, editingCard, setEditingCategory, setEditingCard } = useAppStore();
+  const isOpen = Boolean(editingCategory || editingCard);
 
-  if (!editingCategory && !editingCard) return null;
+  useEffect(() => {
+    if (!isOpen) return;
+    lockBodyScroll();
+    return () => unlockBodyScroll();
+  }, [isOpen]);
+
+  if (!isOpen) return null;
 
   return (
     <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 sm:p-6">

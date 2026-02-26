@@ -878,6 +878,19 @@ export default function CategoryEditForm() {
                   <Palette className="h-4 w-4" />
                   颜色
                 </label>
+                <div className="mb-2 flex items-center gap-2">
+                  <span className="text-xs text-slate-400">自定义颜色</span>
+                  <input
+                    type="color"
+                    value={formData.color || '#3B82F6'}
+                    onChange={e => setFormData({ ...formData, color: e.target.value })}
+                    className="h-9 w-12 cursor-pointer rounded-lg border border-white/15 bg-transparent p-0"
+                    aria-label="选择分类颜色"
+                  />
+                  <span className="rounded-md border border-white/10 bg-white/5 px-2 py-0.5 text-[11px] text-slate-300">
+                    {(formData.color || '#3B82F6').toUpperCase()}
+                  </span>
+                </div>
                 <button
                   type="button"
                   onClick={() => setFormData({ ...formData, color: '' })}

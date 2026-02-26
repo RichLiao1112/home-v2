@@ -8,6 +8,7 @@ import { useAppStore } from '@/stores/appStore';
 import { getBestCardLink } from '@/lib/utils';
 import { useAuthStore } from '@/stores/authStore';
 import { apiCreateSnapshot, apiLoadSearchIndexAllKeys, type SearchIndexItem } from '@/lib/api';
+import { lockBodyScroll, unlockBodyScroll } from '@/lib/scroll-lock';
 
 const OPEN_SEARCH_EVENT = 'home-v2:open-search';
 const OPEN_SETTINGS_EVENT = 'home-v2:open-settings';
@@ -378,6 +379,12 @@ export default function GlobalSearch() {
       .then(setCrossKeyItems)
       .finally(() => setCrossKeyLoading(false));
   }, [crossKeyEnabled, open]);
+
+  useEffect(() => {
+    if (!open) return;
+    lockBodyScroll();
+    return () => unlockBodyScroll();
+  }, [open]);
 
   const buildSearchItems = (
     targetKey: string,
@@ -893,7 +900,7 @@ export default function GlobalSearch() {
                         <div className="truncate text-xs text-slate-400">配置切换</div>
                       </div>
                       <span
-                        className={`inline-flex items-center gap-1 rounded-md border px-2 py-1 text-[11px] ${
+                        className={`inline-flex whitespace-nowrap items-center gap-1 rounded-md border px-2 py-1 text-[11px] ${
                           isCurrent
                             ? 'border-cyan-300/40 bg-cyan-500/20 text-cyan-100'
                             : 'border-white/15 bg-white/5 text-slate-200'
@@ -926,7 +933,7 @@ export default function GlobalSearch() {
                         <span className="rounded-md border border-cyan-300/30 bg-cyan-500/15 px-2 py-1 text-[10px] text-cyan-100">
                           /{result.command.trigger}
                         </span>
-                        <span className="rounded-md border border-white/15 bg-white/5 px-2 py-1 text-[10px] text-slate-300">
+                        <span className="whitespace-nowrap rounded-md border border-white/15 bg-white/5 px-2 py-1 text-[10px] text-slate-300">
                           命令
                         </span>
                       </div>
@@ -950,7 +957,7 @@ export default function GlobalSearch() {
                         <div className="truncate text-sm text-slate-100">{result.action.label}</div>
                         <div className="truncate text-xs text-slate-400">{result.action.detail || '最近操作'}</div>
                       </div>
-                      <span className="inline-flex items-center gap-1 rounded-md border border-white/15 bg-white/5 px-2 py-1 text-[10px] text-slate-300">
+                      <span className="inline-flex whitespace-nowrap items-center gap-1 rounded-md border border-white/15 bg-white/5 px-2 py-1 text-[10px] text-slate-300">
                         <History className="h-3 w-3" />
                         历史
                       </span>
@@ -978,7 +985,7 @@ export default function GlobalSearch() {
                     </button>
                     <div className="flex shrink-0 items-center gap-1">
                       {!normalizedQuery && recentOpenMap.has(item.id) ? (
-                        <span className="hidden rounded-md border border-cyan-300/30 bg-cyan-500/15 px-1.5 py-0.5 text-[10px] text-cyan-100 sm:inline">
+                        <span className="hidden whitespace-nowrap rounded-md border border-cyan-300/30 bg-cyan-500/15 px-1.5 py-0.5 text-[10px] text-cyan-100 sm:inline">
                           常用
                         </span>
                       ) : null}
