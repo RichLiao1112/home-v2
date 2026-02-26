@@ -306,12 +306,12 @@ export default function Header() {
         </div>
       </div>
       {snapshotOpen ? (
-        <div className="fixed inset-0 z-[120] flex items-center justify-center p-4">
+        <div className="fixed inset-0 z-[120] overflow-y-auto p-4 sm:p-6">
           <div
             className="absolute inset-0 bg-slate-950/75"
             onClick={() => !snapshotBusy && setSnapshotOpen(false)}
           />
-          <div className="relative w-full max-w-2xl rounded-2xl border border-white/15 bg-slate-900/95 p-5 shadow-2xl">
+          <div className="relative mx-auto mt-16 w-full max-w-2xl rounded-2xl border border-white/15 bg-slate-900/95 p-5 shadow-2xl sm:mt-20">
             <div className="mb-4 flex items-center justify-between gap-2">
               <div>
                 <h3 className="text-base font-semibold text-slate-100">配置快照</h3>
@@ -333,7 +333,7 @@ export default function Header() {
                 </button>
               </div>
             </div>
-            <div className="scrollbar-hidden max-h-[52vh] overflow-y-auto rounded-xl border border-white/10 bg-slate-900/50">
+            <div className="scrollbar-hidden max-h-[min(56vh,520px)] overflow-y-auto rounded-xl border border-white/10 bg-slate-900/50">
               {snapshotLoading ? (
                 <div className="flex items-center justify-center gap-2 py-10 text-slate-400">
                   <Loader2 className="h-4 w-4 animate-spin" />
