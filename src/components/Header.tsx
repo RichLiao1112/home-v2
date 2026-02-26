@@ -189,11 +189,11 @@ export default function Header() {
                       <div className="min-w-0">
                         <div className="truncate text-sm text-slate-100">
                           {new Date(item.createdAt).toLocaleString()}
-                          <span className="ml-2 rounded-full border border-white/15 bg-white/5 px-1.5 py-0.5 text-[10px] text-slate-300">
-                            {formatSnapshotReason(item.reason)}
-                          </span>
                         </div>
-                        <div className="truncate text-xs text-slate-400">{item.note || '无备注'}</div>
+                      <div className="truncate text-xs text-slate-400">
+                        {formatSnapshotReason(item.reason)}
+                        {item.note ? ` · ${item.note}` : ''}
+                      </div>
                       </div>
                       <div className="flex shrink-0 items-center gap-2">
                         <button
