@@ -28,6 +28,9 @@ import {
 } from 'lucide-react';
 
 export default function Header() {
+  const OPEN_SETTINGS_EVENT = 'home-v2:open-settings';
+  const OPEN_SNAPSHOT_EVENT = 'home-v2:open-snapshot';
+  const OPEN_RECYCLE_EVENT = 'home-v2:open-recycle';
   type RecycleTimeFilter = 'all' | 'today' | '7d' | '30d' | 'older30d';
   const OPEN_SEARCH_EVENT = 'home-v2:open-search';
   const SCROLL_ENTER_Y = 40;
@@ -110,6 +113,37 @@ export default function Header() {
 
   useEffect(() => {
     setCanUsePortal(true);
+  }, []);
+
+  useEffect(() => {
+    const openSettings = () =>
+      setEditingCategory({
+        id: 'layout-settings',
+        title: '__layout__',
+        color: '#3B82F6',
+        cards: [],
+      });
+    const openSnapshots = () => openSnapshotDialog();
+    const openRecycle = () => openRecycleDialog();
+    window.addEventListener(OPEN_SETTINGS_EVENT, openSettings);
+    window.addEventListener(OPEN_SNAPSHOT_EVENT, openSnapshots);
+    window.addEventListener(OPEN_RECYCLE_EVENT, openRecycle);
+    return () => {
+      window.removeEventListener(OPEN_SETTINGS_EVENT, openSettings);
+      window.removeEventListener(OPEN_SNAPSHOT_EVENT, openSnapshots);
+      window.removeEventListener(OPEN_RECYCLE_EVENT, openRecycle);
+    };
+  }, [setEditingCategory]);
+
+  useEffect(() => {
+    const onOpenSnapshot = () => openSnapshotDialog();
+    const onOpenRecycle = () => openRecycleDialog();
+    window.addEventListener(OPEN_SNAPSHOT_EVENT, onOpenSnapshot);
+    window.addEventListener(OPEN_RECYCLE_EVENT, onOpenRecycle);
+    return () => {
+      window.removeEventListener(OPEN_SNAPSHOT_EVENT, onOpenSnapshot);
+      window.removeEventListener(OPEN_RECYCLE_EVENT, onOpenRecycle);
+    };
   }, []);
 
   useEffect(() => {

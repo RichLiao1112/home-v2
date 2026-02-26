@@ -1,123 +1,117 @@
-# Home
+# Home v2
 
-现代化导航主页（Next.js + Tailwind + Zustand）。
+现代化导航主页，基于 `Next.js 14 + React 18 + Tailwind CSS + Zustand`。  
+支持 Docker 单容器部署（内置 Nginx，单端口对外）。
 
 ## 核心能力
 
-- 容器密码登录（`LOGIN_PASSWORD`），会话 cookie 关闭浏览器自动失效
-- 分类/卡片增删改查 + 拖拽排序
-- 卡片内网/公网双链接，自动按访问环境优先选择
-- 页面设置（标题、副标题、背景图、背景模糊）
-- 图片上传到挂载目录，Nginx 通过 `/media/*` 提供静态访问
-- 卡片配置持久化为 JSON 文件（挂载 `./data/home.json`）
+- 登录鉴权（容器环境变量密码，签名会话 Cookie）
+- 多配置 key（新增 / 删除 / 切换 / URL 同步）
+- 分类与卡片管理（增删改查、拖拽排序、移动端适配）
+- 卡片 WAN/LAN 双地址（自动按访问环境优先打开）
+- 全局搜索命令面板（拼音首字母 + 全拼 + 模糊匹配）
+- 配置快照（手动创建、恢复前自动备份、导入前自动备份）
+- 导入导出增强（导入预检 + 差异预览 + 覆盖确认）
+- 回收站（软删除、恢复、永久删除、按时间筛选与搜索）
+- Unsplash 背景 + 本地图片搜索 + 可选清晰度
+- PWA（manifest + service worker + 离线页）
 
-## 本地开发
+## 快速开始
+
+### 本地开发
 
 ```bash
 npm install
 npm run dev
 ```
 
-## Docker 部署（Next.js + Nginx）
+默认访问：`http://localhost:3000`
+
+### Docker Compose（推荐）
 
 ```bash
 cp .env.example .env
 docker compose up -d --build
 ```
 
-默认访问：`http://localhost:3132`
+默认访问：`http://localhost:3131`
 
-## 目录挂载
+## 部署与挂载
 
-- `./data` -> `/app/data`（保存 `home.json`）
-- `./media` -> `/app/media`（Next 写入）与 `/var/www/media`（Nginx 只读提供）
+`docker-compose.yml` 当前挂载：
 
-## 环境变量
+- `./data/home.json:/app/data/home.json`（配置数据）
+- `./assets:/app/assets`（可上传/可编辑图片）
 
-- `LOGIN_PASSWORD`：登录密码（必配，建议修改默认值）
-- `DATA_DIR`：JSON 数据目录（容器内默认 `/app/data`）
-- `MEDIA_DIR`：媒体目录（容器内默认 `/app/media`）
+说明：
 
-# Home
-
-一个现代化的个人导航仪表盘，使用 Next.js + Tailwind CSS + Zustand 构建。
-
-## 特性
-
-- 🔐 **安全登录** - 通过环境变量设置密码，关闭浏览器自动登出
-- 📱 **响应式设计** - 完美适配移动端和桌面端
-- 🎨 **现代化 UI** - Glassmorphism 设计风格
-- 🗂️ **分类管理** - 支持创建多个分类来组织链接
-- ➕ **拖拽添加** - 轻松添加和管理卡片
-- 🖼️ **图标支持** - 支持自定义图标 URL
-- 🐳 **Docker 部署** - 一键部署，内置 Nginx 反向代理
-
-## 快速开始
-
-### 使用 Docker Compose（推荐）
-
-```bash
-# 克隆项目
-cd /home/workspace/home-v2
-
-# 启动服务（设置你的密码）
-LOGIN_PASSWORD=your_secure_password docker-compose up -d
-
-# 访问 http://localhost:3131
-```
-
-### 开发模式
-
-```bash
-# 安装依赖
-npm install
-
-# 启动开发服务器
-npm run dev
-
-# 访问 http://localhost:3000
-```
-
-### 构建生产版本
-
-```bash
-# 构建
-npm run build
-
-# 启动
-npm start
-```
+- 内置静态图标在镜像内 `/app/media-builtin/imgs`，通过 `/media/imgs/*` 访问。
+- 运行期上传资源建议放 `assets`，同样可被搜索与访问。
 
 ## 环境变量
 
-| 变量名           | 说明     | 默认值     |
-| ---------------- | -------- | ---------- |
-| `LOGIN_PASSWORD` | 登录密码 | `admin123` |
-| `PORT`           | 应用端口 | `3000`     |
+`.env.example`：
 
-## 项目结构
+- `LOGIN_PASSWORD`：登录密码（必填，生产请改强密码）
+- `AUTH_SECRET`：会话签名密钥（生产强烈建议配置随机长串）
+- `AUTH_SESSION_MAX_AGE_SECONDS`：会话有效期（秒）
+- `SNAPSHOT_MAX_PER_KEY`：每个 key 最大快照数量
+- `NEXT_PUBLIC_RECYCLE_RETENTION_DAYS`：回收站自动清理天数（默认 30）
+- `UNSPLASH_ACCESS_KEY`：Unsplash API Key
+- `ASSETS_DIR`：用户可写资源目录（容器内）
+- `BUILTIN_MEDIA_DIR`：镜像内置媒体目录（容器内）
 
-```
-home-v2/
-├── src/
-│   ├── app/              # Next.js App Router
-│   ├── components/       # React 组件
-│   ├── stores/          # Zustand 状态管理
-│   └── types/           # TypeScript 类型
-├── nginx/               # Nginx 配置
-├── public/              # 静态资源
-├── Dockerfile           # Docker 构建文件
-└── docker-compose.yml   # Docker Compose 配置
-```
+## 搜索命令面板
+
+打开方式：
+
+- `/`
+- `Ctrl+K`
+
+支持：
+
+- 结果上下键选择 + 回车执行
+- 结果列表跟随光标自动滚动
+- 右侧预览（卡片/命令/配置/历史）
+- 最近打开与最近操作历史
+
+前缀筛选语法：
+
+- `key:` / `k:`：仅搜索配置 key
+- `card:` / `c:`：仅搜索卡片标题
+- `cat:`：仅搜索分类
+- `desc:`：仅搜索备注
+- `wan:`：仅搜索 WAN 地址
+- `lan:`：仅搜索 LAN 地址
+- `/xxx`：命令模式
+
+卡片二级快捷键（选中卡片后）：
+
+- `Alt+E`：编辑
+- `Alt+D`：删除（进回收站）
+- `Alt+C`：复制链接
+- `Alt+L`：打开 LAN
+- `Alt+W`：打开 WAN
+
+## 导入、快照、回收站
+
+- 导入时先进行格式校验与差异预览
+- 确认导入前会自动创建 `before_import` 快照
+- 快照时间统一按北京时间（`Asia/Shanghai`）显示
+- 删除分类/卡片为软删除，进入回收站
+- 回收站支持关键词搜索、时间筛选、恢复/永久删除/清空
+
+## PWA 与离线
+
+- 已提供 `manifest.webmanifest`
+- Service Worker：`public/sw.js`
+- 离线兜底页：`public/offline.html`
 
 ## 技术栈
 
-- **框架**: Next.js 15 + React 19
-- **样式**: Tailwind CSS
-- **状态管理**: Zustand
-- **图标**: Lucide React
-- **部署**: Docker + Nginx
-
-## 许可证
-
-MIT
+- 框架：Next.js 14 / React 18
+- 样式：Tailwind CSS
+- 状态管理：Zustand
+- 图标：Lucide React
+- 拼音检索：pinyin-pro
+- 部署：Docker + Nginx（单容器）
