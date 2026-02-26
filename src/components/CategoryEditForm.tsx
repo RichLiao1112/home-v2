@@ -226,7 +226,7 @@ export default function CategoryEditForm() {
                       title={item.name}
                     >
                       <div className="flex h-11 w-11 items-center justify-center rounded-xl bg-slate-800/80 ring-1 ring-white/10">
-                        <img src={item.url} alt={item.name} className="h-7 w-7 rounded object-cover" />
+                        <img src={item.url} alt={item.name} className="h-7 w-7 rounded object-contain" />
                       </div>
                       <div className="w-full truncate text-center text-[10px] text-slate-300">{item.name}</div>
                     </button>
@@ -293,7 +293,7 @@ export default function CategoryEditForm() {
                     className="motion-btn-hover overflow-hidden rounded-lg border border-white/15 bg-slate-900/70"
                     title={photo.author ? `${photo.title || 'Unsplash'} · ${photo.author}` : photo.title || 'Unsplash'}
                   >
-                    <img src={photo.thumb} alt={photo.title || 'unsplash'} className="h-14 w-full object-cover" />
+                    <img src={photo.thumb} alt={photo.title || 'unsplash'} className="h-14 w-full object-contain" />
                   </button>
                 ))}
               </div>

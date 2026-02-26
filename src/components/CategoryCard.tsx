@@ -98,7 +98,7 @@ function SortableCard({
             style={{ backgroundColor: card.coverColor || color }}
           >
             {card.cover ? (
-              <img src={card.cover} alt={`${card.title} 图标`} className="h-7 w-7 rounded object-cover" />
+              <img src={card.cover} alt={`${card.title} 图标`} className="h-7 w-7 rounded object-contain" />
             ) : (
               <Link2 className="h-5 w-5" />
             )}
