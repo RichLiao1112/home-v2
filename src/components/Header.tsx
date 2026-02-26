@@ -93,7 +93,9 @@ export default function Header() {
   };
 
   const handleCreateSnapshot = async () => {
-    const note = window.prompt('快照备注（可选）') || '';
+    const nowText = new Date().toLocaleString();
+    const note = window.prompt('快照备注（可选）', `手动快照 ${nowText}`);
+    if (note === null) return;
     setSnapshotBusy(true);
     await apiCreateSnapshot(currentKey, note.trim() || undefined);
     await loadSnapshots();
