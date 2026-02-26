@@ -69,7 +69,7 @@ export default function Header() {
       style={headerStyle}
     >
       <div
-        className={`mx-auto w-full max-w-7xl px-4 sm:px-6 lg:px-8 ${isScrolled ? 'py-2.5 sm:py-3' : 'py-3 sm:py-4'}`}
+        className={`mx-auto w-full max-w-[1720px] px-4 sm:px-6 lg:px-8 ${isScrolled ? 'py-2.5 sm:py-3' : 'py-3 sm:py-4'}`}
       >
         <div className="flex items-center justify-between gap-3">
           <div className="flex min-w-0 items-center gap-3">
