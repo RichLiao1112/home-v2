@@ -74,6 +74,7 @@ docker compose up -d --build
 - 结果列表跟随光标自动滚动
 - 右侧预览（卡片/命令/配置/历史）
 - 最近打开与最近操作历史
+- 跨 key 搜索（可开关，支持检索其他配置内卡片）
 
 前缀筛选语法：
 
@@ -96,6 +97,14 @@ docker compose up -d --build
 - `/next-key`（别名：`/key-next`）：切换到下一个 key
 - `/prev-key`（别名：`/previous-key`、`/key-prev`）：切换到上一个 key
 - `/snapshot-now`（别名：`/create-snapshot`）：立即创建快照
+
+跨 key 搜索说明：
+
+- 搜索弹窗右上角可切换：`跨 key 搜索：开/关`
+- 开启后会加载并检索所有 key 的卡片索引
+- 来自其他 key 的结果会标记 `[key名]`
+- 打开/编辑/删除跨 key 卡片时会先自动切换到对应 key
+- 开关状态会保存在本地（下次打开继续生效）
 
 卡片二级快捷键（选中卡片后）：
 

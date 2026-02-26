@@ -7,7 +7,7 @@ import type { Card } from '@/types';
 import { useAppStore } from '@/stores/appStore';
 import { getBestCardLink } from '@/lib/utils';
 import { useAuthStore } from '@/stores/authStore';
-import { apiCreateSnapshot } from '@/lib/api';
+import { apiCreateSnapshot, apiLoadSearchIndexAllKeys, type SearchIndexItem } from '@/lib/api';
 
 const OPEN_SEARCH_EVENT = 'home-v2:open-search';
 const OPEN_SETTINGS_EVENT = 'home-v2:open-settings';
@@ -16,6 +16,7 @@ const OPEN_RECYCLE_EVENT = 'home-v2:open-recycle';
 
 const RECENT_OPEN_STORAGE_KEY = 'home-v2-search-recent-open';
 const RECENT_ACTION_STORAGE_KEY = 'home-v2-search-recent-actions';
+const CROSS_KEY_STORAGE_KEY = 'home-v2-search-cross-key-enabled';
 const MAX_RESULTS = 50;
 const MAX_RECENT_OPEN = 60;
 const MAX_RECENT_ACTION = 30;
@@ -24,6 +25,7 @@ type PrefixMode = 'all' | 'key' | 'card' | 'cat' | 'desc' | 'wan' | 'lan' | 'cmd
 
 type SearchItem = {
   id: string;
+  key: string;
   categoryId: string;
   categoryTitle: string;
   card: Card;
@@ -357,15 +359,32 @@ export default function GlobalSearch() {
   const [activeIndex, setActiveIndex] = useState(0);
   const [recentOpen, setRecentOpen] = useState<RecentOpenRecord[]>([]);
   const [recentActions, setRecentActions] = useState<RecentActionRecord[]>([]);
+  const [crossKeyEnabled, setCrossKeyEnabled] = useState(false);
+  const [crossKeyLoading, setCrossKeyLoading] = useState(false);
+  const [crossKeyItems, setCrossKeyItems] = useState<SearchIndexItem[]>([]);
 
   useEffect(() => {
     setRecentOpen(readRecentOpen());
     setRecentActions(readRecentActions());
+    if (typeof window !== 'undefined') {
+      setCrossKeyEnabled(window.localStorage.getItem(CROSS_KEY_STORAGE_KEY) === '1');
+    }
   }, []);
 
-  const searchItems = useMemo<SearchItem[]>(() => {
+  useEffect(() => {
+    if (!open || !crossKeyEnabled) return;
+    setCrossKeyLoading(true);
+    apiLoadSearchIndexAllKeys()
+      .then(setCrossKeyItems)
+      .finally(() => setCrossKeyLoading(false));
+  }, [crossKeyEnabled, open]);
+
+  const buildSearchItems = (
+    targetKey: string,
+    targetCategories: Array<{ id: string; title: string; cards: Card[]; position?: number }>,
+  ): SearchItem[] => {
     const items: SearchItem[] = [];
-    categories
+    targetCategories
       .slice()
       .sort((a, b) => (a.position ?? 0) - (b.position ?? 0))
       .forEach(category => {
@@ -382,7 +401,8 @@ export default function GlobalSearch() {
               .filter(Boolean)
               .join(' ');
             items.push({
-              id: `${category.id}-${card.id}`,
+              id: `${targetKey}::${category.id}-${card.id}`,
+              key: targetKey,
               categoryId: category.id,
               categoryTitle: category.title,
               card,
@@ -398,7 +418,44 @@ export default function GlobalSearch() {
           });
       });
     return items;
-  }, [categories]);
+  };
+
+  const localSearchItems = useMemo(() => buildSearchItems(currentKey, categories), [currentKey, categories]);
+
+  const crossKeySearchItems = useMemo<SearchItem[]>(() => {
+    if (!crossKeyEnabled) return [];
+    return crossKeyItems
+      .filter(item => item.key !== currentKey)
+      .map(item => {
+        const mergedSource = [item.categoryTitle, item.card.title, item.card.description, item.card.wanLink, item.card.lanLink]
+          .filter(Boolean)
+          .join(' ');
+        return {
+          id: `${item.key}::${item.categoryId}-${item.card.id}`,
+          key: item.key,
+          categoryId: item.categoryId,
+          categoryTitle: item.categoryTitle,
+          card: {
+            id: item.card.id,
+            title: item.card.title,
+            description: item.card.description || '',
+            wanLink: item.card.wanLink || '',
+            lanLink: item.card.lanLink || '',
+            openInNewWindow: item.card.openInNewWindow ?? true,
+          },
+          titleText: normalize(item.card.title || ''),
+          categoryText: normalize(item.categoryTitle || ''),
+          descriptionText: normalize(item.card.description || ''),
+          wanText: normalize(item.card.wanLink || ''),
+          lanText: normalize(item.card.lanLink || ''),
+          mergedText: normalize(mergedSource),
+          initials: toPinyinInitials(mergedSource),
+          pinyinFull: toPinyinFull(mergedSource),
+        };
+      });
+  }, [crossKeyEnabled, crossKeyItems, currentKey]);
+
+  const searchItems = useMemo(() => [...localSearchItems, ...crossKeySearchItems], [localSearchItems, crossKeySearchItems]);
 
   const searchItemMap = useMemo(() => new Map(searchItems.map(item => [item.id, item])), [searchItems]);
   const recentOpenMap = useMemo(() => {
@@ -434,7 +491,15 @@ export default function GlobalSearch() {
     setTimeout(() => inputRef.current?.focus(), 0);
   };
 
-  const openCardLink = (item: SearchItem, mode: 'best' | 'wan' | 'lan') => {
+  const toggleCrossKey = (enabled: boolean) => {
+    setCrossKeyEnabled(enabled);
+    if (typeof window !== 'undefined') {
+      window.localStorage.setItem(CROSS_KEY_STORAGE_KEY, enabled ? '1' : '0');
+    }
+  };
+
+  const openCardLink = async (item: SearchItem, mode: 'best' | 'wan' | 'lan') => {
+    await ensureKeyLoaded(item.key);
     const link =
       mode === 'wan'
         ? item.card.wanLink
@@ -463,9 +528,9 @@ export default function GlobalSearch() {
     closeDialog();
   };
 
-  const switchConfigKey = async (key: string) => {
+  const switchConfigKey = async (key: string, closeAfter = true) => {
     if (!key || key === currentKey) {
-      closeDialog();
+      if (closeAfter) closeDialog();
       return;
     }
     if (typeof window !== 'undefined') {
@@ -480,10 +545,16 @@ export default function GlobalSearch() {
       detail: '通过搜索弹窗切换',
       payload: { key },
     });
-    closeDialog();
+    if (closeAfter) closeDialog();
   };
 
-  const handleEditCard = (item: SearchItem) => {
+  const ensureKeyLoaded = async (key: string) => {
+    if (!key || key === currentKey) return;
+    await switchConfigKey(key, false);
+  };
+
+  const handleEditCard = async (item: SearchItem) => {
+    await ensureKeyLoaded(item.key);
     setEditingCard({ ...item.card, categoryId: item.categoryId });
     recordAction({
       type: 'card-edit',
@@ -494,9 +565,10 @@ export default function GlobalSearch() {
     closeDialog();
   };
 
-  const handleDeleteCard = (item: SearchItem) => {
+  const handleDeleteCard = async (item: SearchItem) => {
     if (!window.confirm(`确认删除卡片「${item.card.title}」吗？`)) return;
     if (!window.confirm('请再次确认：删除后卡片会进入回收站。是否继续？')) return;
+    await ensureKeyLoaded(item.key);
     deleteCard(item.card.id, item.categoryId);
     recordAction({
       type: 'card-delete',
@@ -584,9 +656,9 @@ export default function GlobalSearch() {
     if ((action.type === 'card-open' || action.type === 'card-edit' || action.type === 'card-delete' || action.type === 'card-copy') && action.payload?.searchItemId) {
       const target = searchItemMap.get(action.payload.searchItemId);
       if (!target) return;
-      if (action.type === 'card-open') openCardLink(target, 'best');
-      if (action.type === 'card-edit') handleEditCard(target);
-      if (action.type === 'card-delete') handleDeleteCard(target);
+      if (action.type === 'card-open') void openCardLink(target, 'best');
+      if (action.type === 'card-edit') void handleEditCard(target);
+      if (action.type === 'card-delete') void handleDeleteCard(target);
       if (action.type === 'card-copy') await handleCopyCardLink(target);
     }
   };
@@ -695,19 +767,19 @@ export default function GlobalSearch() {
           void replayHistory(target.action);
           return;
         }
-        openCardLink(target.item, 'best');
+        void openCardLink(target.item, 'best');
         return;
       }
 
       if (event.altKey && activeResult?.kind === 'card') {
         if (key === 'e') {
           event.preventDefault();
-          handleEditCard(activeResult.item);
+          void handleEditCard(activeResult.item);
           return;
         }
         if (key === 'd') {
           event.preventDefault();
-          handleDeleteCard(activeResult.item);
+          void handleDeleteCard(activeResult.item);
           return;
         }
         if (key === 'c') {
@@ -717,12 +789,12 @@ export default function GlobalSearch() {
         }
         if (key === 'l') {
           event.preventDefault();
-          openCardLink(activeResult.item, 'lan');
+          void openCardLink(activeResult.item, 'lan');
           return;
         }
         if (key === 'w') {
           event.preventDefault();
-          openCardLink(activeResult.item, 'wan');
+          void openCardLink(activeResult.item, 'wan');
           return;
         }
       }
@@ -774,8 +846,23 @@ export default function GlobalSearch() {
             <X className="h-4 w-4" />
           </button>
         </div>
-        <div className="mt-2 text-[11px] text-slate-500">
-          快捷键：`/` 或 `Ctrl+K` 打开。前缀筛选：`key:` `card:` `cat:` `desc:` `wan:` `lan:` `/命令`。二级快捷键：`Alt+E/D/C/L/W`。可直接输入 `/xxx` 执行对应命令。
+        <div className="mt-2 flex flex-wrap items-center justify-between gap-2 text-[11px] text-slate-500">
+          <span>
+            快捷键：`/` 或 `Ctrl+K` 打开。前缀筛选：`key:` `card:` `cat:` `desc:` `wan:` `lan:` `/命令`。二级快捷键：`Alt+E/D/C/L/W`。可直接输入 `/xxx` 执行对应命令。
+          </span>
+          <button
+            type="button"
+            onClick={() => toggleCrossKey(!crossKeyEnabled)}
+            className={`motion-btn-hover inline-flex h-7 items-center rounded-md border px-2 text-[11px] ${
+              crossKeyEnabled
+                ? 'border-cyan-300/40 bg-cyan-500/20 text-cyan-100'
+                : 'border-white/15 bg-white/5 text-slate-300'
+            }`}
+            title="开启后会检索其他配置 key 的卡片"
+          >
+            跨 key 搜索：{crossKeyEnabled ? '开' : '关'}
+            {crossKeyLoading ? ' · 加载中' : ''}
+          </button>
         </div>
 
         <div className="mt-3 grid gap-3 lg:grid-cols-[minmax(0,1fr)_300px]">
@@ -881,10 +968,11 @@ export default function GlobalSearch() {
                       active ? 'bg-cyan-500/15' : 'hover:bg-white/10'
                     }`}
                   >
-                    <button type="button" onClick={() => openCardLink(item, 'best')} className="min-w-0 flex-1 text-left">
+                  <button type="button" onClick={() => void openCardLink(item, 'best')} className="min-w-0 flex-1 text-left">
                       <div className="truncate text-sm text-slate-100">{highlightText(item.card.title, parsedQuery)}</div>
                       <div className="truncate text-xs text-slate-400">
-                        {highlightText(item.categoryTitle, parsedQuery)}
+                      {highlightText(item.categoryTitle, parsedQuery)}
+                      {item.key !== currentKey ? <span className="ml-1 text-cyan-300">[{item.key}]</span> : null}
                         {item.card.description ? <> · {highlightText(item.card.description, parsedQuery)}</> : null}
                       </div>
                     </button>
@@ -896,7 +984,7 @@ export default function GlobalSearch() {
                       ) : null}
                       <button
                         type="button"
-                        onClick={() => openCardLink(item, 'lan')}
+                        onClick={() => void openCardLink(item, 'lan')}
                         disabled={!item.card.lanLink}
                         className="motion-btn-hover inline-flex h-7 items-center gap-1 rounded-md border border-white/15 bg-white/5 px-2 text-[11px] text-slate-200 disabled:cursor-not-allowed disabled:opacity-40"
                       >
@@ -905,7 +993,7 @@ export default function GlobalSearch() {
                       </button>
                       <button
                         type="button"
-                        onClick={() => openCardLink(item, 'wan')}
+                        onClick={() => void openCardLink(item, 'wan')}
                         disabled={!item.card.wanLink}
                         className="motion-btn-hover inline-flex h-7 items-center gap-1 rounded-md border border-white/15 bg-white/5 px-2 text-[11px] text-slate-200 disabled:cursor-not-allowed disabled:opacity-40"
                       >
@@ -938,7 +1026,7 @@ export default function GlobalSearch() {
                 <div className="grid grid-cols-2 gap-2">
                   <button
                     type="button"
-                    onClick={() => handleEditCard(activeResult.item)}
+                    onClick={() => void handleEditCard(activeResult.item)}
                     className="motion-btn-hover inline-flex h-8 items-center justify-center gap-1 rounded-lg border border-white/15 bg-white/5 text-xs text-slate-200"
                   >
                     <Edit2 className="h-3.5 w-3.5" />
@@ -954,7 +1042,7 @@ export default function GlobalSearch() {
                   </button>
                   <button
                     type="button"
-                    onClick={() => handleDeleteCard(activeResult.item)}
+                    onClick={() => void handleDeleteCard(activeResult.item)}
                     className="motion-btn-hover inline-flex h-8 items-center justify-center gap-1 rounded-lg border border-rose-400/30 bg-rose-500/10 text-xs text-rose-200"
                   >
                     <Trash2 className="h-3.5 w-3.5" />

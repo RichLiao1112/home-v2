@@ -8,6 +8,20 @@ export interface SnapshotMeta {
   note?: string;
 }
 
+export interface SearchIndexItem {
+  key: string;
+  categoryId: string;
+  categoryTitle: string;
+  card: {
+    id: string;
+    title: string;
+    description?: string;
+    wanLink?: string;
+    lanLink?: string;
+    openInNewWindow?: boolean;
+  };
+}
+
 export const apiLogin = async (password: string) => {
   const res = await fetch('/api/auth/login', {
     method: 'POST',
@@ -84,6 +98,13 @@ export const apiSearchMedia = async (q: string) => {
   if (!res.ok) return [];
   const json = (await res.json()) as { files?: Array<{ name: string; url: string }> };
   return json.files || [];
+};
+
+export const apiLoadSearchIndexAllKeys = async () => {
+  const res = await fetch('/api/search', { cache: 'no-store' });
+  if (!res.ok) return [];
+  const json = (await res.json()) as { items?: SearchIndexItem[] };
+  return json.items || [];
 };
 
 export const apiSearchUnsplashCollections = async (q: string) => {
