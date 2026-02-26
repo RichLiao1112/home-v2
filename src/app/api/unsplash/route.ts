@@ -85,7 +85,7 @@ export async function POST(req: NextRequest) {
   const payload = (await response.json()) as Array<{
     id: string;
     alt_description?: string | null;
-    urls?: { thumb?: string; regular?: string };
+    urls?: { thumb?: string; regular?: string; full?: string; raw?: string };
     user?: { name?: string };
   }>;
 
@@ -94,6 +94,8 @@ export async function POST(req: NextRequest) {
     title: item.alt_description || '',
     thumb: item.urls?.thumb || '',
     regular: item.urls?.regular || '',
+    full: item.urls?.full || '',
+    raw: item.urls?.raw || '',
     author: item.user?.name || '',
   }));
 

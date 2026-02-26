@@ -46,7 +46,7 @@ export default function CategoryEditForm() {
   >([]);
   const [selectedCollectionId, setSelectedCollectionId] = useState('');
   const [unsplashPhotos, setUnsplashPhotos] = useState<
-    Array<{ id: string; title: string; thumb: string; regular: string; author: string }>
+    Array<{ id: string; title: string; thumb: string; regular: string; full: string; raw: string; author: string }>
   >([]);
   const savedUnsplashCollectionId = layout.head?.unsplashCollectionId || '';
 
@@ -289,7 +289,9 @@ export default function CategoryEditForm() {
                   <button
                     type="button"
                     key={photo.id}
-                    onClick={() => setLayoutData({ ...layoutData, backgroundImage: photo.regular })}
+                    onClick={() =>
+                      setLayoutData({ ...layoutData, backgroundImage: photo.full || photo.raw || photo.regular })
+                    }
                     className="motion-btn-hover overflow-hidden rounded-lg border border-white/15 bg-slate-900/70"
                     title={photo.author ? `${photo.title || 'Unsplash'} · ${photo.author}` : photo.title || 'Unsplash'}
                   >

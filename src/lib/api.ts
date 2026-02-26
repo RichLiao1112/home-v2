@@ -97,7 +97,7 @@ export const apiListUnsplashPhotos = async (collectionId: string) => {
   });
   if (!res.ok) return [];
   const json = (await res.json()) as {
-    photos?: Array<{ id: string; title: string; thumb: string; regular: string; author: string }>;
+    photos?: Array<{ id: string; title: string; thumb: string; regular: string; full: string; raw: string; author: string }>;
   };
   return json.photos || [];
 };
