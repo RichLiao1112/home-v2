@@ -247,7 +247,7 @@ export default function CategoryCard({ category }: CategoryCardProps) {
 
       <DndContext sensors={sensors} collisionDetection={closestCenter} onDragEnd={onCardDragEnd}>
         <SortableContext items={cards.map((card) => card.id)} strategy={rectSortingStrategy}>
-          <div className={`grid grid-cols-1 gap-3 sm:grid-cols-2 ${DESKTOP_GRID_CLASS[desktopColumns]}`}>
+          <div className={`grid grid-cols-2 gap-3 md:grid-cols-4 ${DESKTOP_GRID_CLASS[desktopColumns]}`}>
             {cards.map((card) => (
               <SortableCard key={card.id} categoryId={category.id} card={card} color={category.color} />
             ))}
