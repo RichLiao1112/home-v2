@@ -14,7 +14,7 @@ export default function CardEditForm() {
     title: editingCard?.title || '',
     description: editingCard?.description || '',
     cover: editingCard?.cover || '',
-    coverColor: editingCard?.coverColor || '#3B82F6',
+    coverColor: editingCard?.coverColor ?? '#3B82F6',
     wanLink: editingCard?.wanLink || '',
     lanLink: editingCard?.lanLink || '',
     openInNewWindow: editingCard?.openInNewWindow ?? true,
@@ -63,6 +63,8 @@ export default function CardEditForm() {
 
   const fieldClassName =
     'motion-input-focus w-full rounded-xl border border-white/15 bg-slate-900/70 px-4 py-2.5 text-slate-100 placeholder:text-slate-500 outline-none transition-all focus:border-cyan-400/70 focus:ring-2 focus:ring-cyan-400/30';
+  const selectedCategoryColor = categories.find(cat => cat.id === formData.categoryId)?.color || '';
+  const effectiveCoverColor = formData.coverColor || selectedCategoryColor || '#3B82F6';
 
   return (
     <div className="overflow-hidden rounded-2xl border border-white/15 bg-slate-900/90 shadow-2xl shadow-slate-950/60 backdrop-blur-xl">
@@ -213,12 +215,25 @@ export default function CardEditForm() {
 
         <div>
           <label className="mb-1 block text-sm font-medium text-slate-200">图标底色</label>
-          <input
-            type="color"
-            value={formData.coverColor}
-            onChange={e => setFormData({ ...formData, coverColor: e.target.value })}
-            className="h-10 w-24 cursor-pointer rounded-xl bg-slate-900/70"
-          />
+          <div className="flex items-center gap-2">
+            <input
+              type="color"
+              value={effectiveCoverColor}
+              onChange={e => setFormData({ ...formData, coverColor: e.target.value })}
+              className="h-10 w-24 cursor-pointer rounded-xl bg-slate-900/70"
+            />
+            <button
+              type="button"
+              onClick={() => setFormData({ ...formData, coverColor: '' })}
+              className={`motion-btn-hover whitespace-nowrap rounded-xl border px-3 py-2 text-xs ${
+                formData.coverColor === ''
+                  ? 'border-cyan-300/60 bg-cyan-500/15 text-cyan-100'
+                  : 'border-white/15 bg-white/5 text-slate-300 hover:bg-white/10'
+              }`}
+            >
+              使用分类颜色
+            </button>
+          </div>
         </div>
 
         <label className="flex cursor-pointer items-center gap-2 rounded-xl border border-white/15 bg-slate-900/70 p-3 text-sm text-slate-200">

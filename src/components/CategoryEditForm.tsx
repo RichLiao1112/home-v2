@@ -25,7 +25,7 @@ export default function CategoryEditForm() {
 
   const [formData, setFormData] = useState({
     title: editingCategory?.title || '',
-    color: editingCategory?.color || COLORS[0],
+    color: editingCategory?.color ?? COLORS[0],
   });
   const [layoutData, setLayoutData] = useState({
     name: layout.head?.name || 'Home',
@@ -523,6 +523,17 @@ export default function CategoryEditForm() {
                 <Palette className="h-4 w-4" />
                 颜色
               </label>
+              <button
+                type="button"
+                onClick={() => setFormData({ ...formData, color: '' })}
+                className={`motion-btn-hover mb-2 inline-flex h-9 items-center justify-center rounded-xl border px-3 text-xs ${
+                  formData.color === ''
+                    ? 'border-cyan-300/60 bg-cyan-500/15 text-cyan-100'
+                    : 'border-white/15 bg-white/5 text-slate-300 hover:bg-white/10'
+                }`}
+              >
+                使用毛玻璃（无底色）
+              </button>
               <div className="grid grid-cols-5 gap-2">
                 {COLORS.map(color => (
                   <button

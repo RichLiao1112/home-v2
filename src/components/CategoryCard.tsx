@@ -64,6 +64,10 @@ function SortableCard({
     if (!url) return;
     window.open(url, card.openInNewWindow === false ? '_self' : '_blank');
   };
+  const resolvedIconColor = (card.coverColor || '').trim() || (color || '').trim();
+  const iconWrapperClassName = resolvedIconColor
+    ? 'flex h-9 w-9 shrink-0 items-center justify-center rounded-lg text-white sm:h-11 sm:w-11 sm:rounded-xl'
+    : 'flex h-9 w-9 shrink-0 items-center justify-center rounded-lg border border-white/20 bg-white/10 text-slate-100 sm:h-11 sm:w-11 sm:rounded-xl';
 
   return (
     <div
@@ -105,8 +109,8 @@ function SortableCard({
       >
         <div className="mb-2.5 flex items-center gap-2.5 sm:mb-3 sm:gap-3">
           <div
-            className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg text-white sm:h-11 sm:w-11 sm:rounded-xl"
-            style={{ backgroundColor: card.coverColor || color }}
+            className={iconWrapperClassName}
+            style={resolvedIconColor ? { backgroundColor: resolvedIconColor } : undefined}
           >
             {card.cover ? (
               <img src={card.cover} alt={`${card.title} 图标`} className="h-6 w-6 rounded object-contain sm:h-7 sm:w-7" />
