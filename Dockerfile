@@ -14,6 +14,8 @@ RUN \
 
 # Copy source code
 COPY . .
+# Ensure media/imgs exists even if repository has no static images yet
+RUN mkdir -p /app/media/imgs
 
 # Build the application
 RUN npm run build
