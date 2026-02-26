@@ -97,11 +97,11 @@ export const apiSearchUnsplashCollections = async (q: string) => {
   return json.collections || [];
 };
 
-export const apiListUnsplashPhotos = async (collectionId: string) => {
+export const apiListUnsplashPhotos = async (collectionId: string, page = 1, perPage = 24) => {
   const res = await fetch('/api/unsplash', {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ collectionId }),
+    body: JSON.stringify({ collectionId, page, perPage }),
   });
   if (!res.ok) return [];
   const json = (await res.json()) as {

@@ -74,7 +74,7 @@ function SortableCard({
       ref={setNodeRef}
       style={style}
       className={`group/card surface-card relative rounded-xl border border-white/15 p-3 backdrop-blur-lg transition sm:rounded-2xl sm:p-4 ${
-        isDragging ? 'z-20 shadow-lg shadow-cyan-900/40' : 'hover:border-cyan-300/30'
+        isDragging ? 'z-20 shadow-lg shadow-cyan-900/40' : ''
       }`}
     >
       <div className="absolute right-1.5 top-1.5 flex items-center gap-0.5 opacity-0 transition group-hover/card:opacity-100 sm:right-2 sm:top-2 sm:gap-1">

@@ -17,6 +17,7 @@ const COLORS = [
   '#F97316',
   '#6366F1',
 ];
+const UNSPLASH_PER_PAGE = 24;
 
 export default function CategoryEditForm() {
   const { editingCategory, setEditingCategory, addCategory, updateCategory, deleteCategory, layout, updateLayout } =
@@ -51,6 +52,9 @@ export default function CategoryEditForm() {
   const [unsplashPhotos, setUnsplashPhotos] = useState<
     Array<{ id: string; title: string; thumb: string; regular: string; full: string; raw: string; author: string }>
   >([]);
+  const [unsplashPage, setUnsplashPage] = useState(1);
+  const [unsplashLoading, setUnsplashLoading] = useState(false);
+  const [unsplashHasMore, setUnsplashHasMore] = useState(false);
   const savedUnsplashCollectionId = layout.head?.unsplashCollectionId || '';
 
   useEffect(() => {
@@ -66,19 +70,27 @@ export default function CategoryEditForm() {
     if (list[0]) {
       setSelectedCollectionId(list[0].id);
       setLayoutData(prev => ({ ...prev, unsplashCollectionId: list[0].id }));
-      const photos = await apiListUnsplashPhotos(list[0].id);
-      setUnsplashPhotos(photos);
+      await loadUnsplashPhotos(list[0].id, 1);
     } else {
       setSelectedCollectionId('');
       setUnsplashPhotos([]);
+      setUnsplashPage(1);
+      setUnsplashHasMore(false);
     }
   };
 
-  const loadUnsplashPhotos = async (collectionId: string) => {
+  const loadUnsplashPhotos = async (collectionId: string, page = 1) => {
     setSelectedCollectionId(collectionId);
     setLayoutData(prev => ({ ...prev, unsplashCollectionId: collectionId }));
-    const photos = await apiListUnsplashPhotos(collectionId);
-    setUnsplashPhotos(photos);
+    setUnsplashLoading(true);
+    try {
+      const photos = await apiListUnsplashPhotos(collectionId, page, UNSPLASH_PER_PAGE);
+      setUnsplashPhotos(photos);
+      setUnsplashPage(page);
+      setUnsplashHasMore(photos.length >= UNSPLASH_PER_PAGE);
+    } finally {
+      setUnsplashLoading(false);
+    }
   };
 
   const loadUnsplashBySavedId = async () => {
@@ -157,10 +169,15 @@ export default function CategoryEditForm() {
     if (Number.isNaN(next)) return String(fallback);
     return String(Math.min(40, Math.max(0, Math.round(next))));
   };
+  const isSelectedBackground = (url: string) => layoutData.backgroundImage.trim() === url.trim();
 
   return (
-    <div className="overflow-hidden rounded-2xl border border-white/15 bg-slate-900/90 shadow-2xl shadow-slate-950/60 backdrop-blur-xl">
-      <div className="flex items-center justify-between border-b border-white/10 bg-slate-900/80 px-6 py-4">
+    <div
+      className={`overflow-hidden rounded-2xl border border-white/15 bg-slate-900/90 shadow-2xl shadow-slate-950/60 backdrop-blur-xl ${
+        isLayoutMode ? 'flex h-[min(86vh,860px)] flex-col' : ''
+      }`}
+    >
+      <div className="flex shrink-0 items-center justify-between border-b border-white/10 bg-slate-900/80 px-6 py-4">
         <div className="flex items-center gap-2">
           {isLayoutMode ? (
             <SlidersHorizontal className="h-5 w-5 text-cyan-300" />
@@ -181,10 +198,11 @@ export default function CategoryEditForm() {
 
       <form
         onSubmit={handleSubmit}
-        className="p-6 space-y-4"
+        className={isLayoutMode ? 'flex min-h-0 flex-1 flex-col p-6' : 'p-6'}
       >
-        {isLayoutMode ? (
-          <>
+        <div className={isLayoutMode ? 'scrollbar-hidden min-h-0 flex-1 space-y-4 overflow-y-auto pr-1' : 'space-y-4'}>
+          {isLayoutMode ? (
+            <>
             <div>
               <label className="mb-1 block text-sm font-medium text-slate-200">站点名称</label>
               <input
@@ -428,7 +446,7 @@ export default function CategoryEditForm() {
                 {unsplashCollections.length > 0 ? (
                   <select
                     value={selectedCollectionId}
-                    onChange={e => loadUnsplashPhotos(e.target.value)}
+                    onChange={e => loadUnsplashPhotos(e.target.value, 1)}
                     className={fieldClassName}
                   >
                     {unsplashCollections.map(item => (
@@ -443,20 +461,58 @@ export default function CategoryEditForm() {
                   </div>
                 )}
               </div>
+              <div className="mb-1 flex items-center justify-between text-xs text-slate-400">
+                <span>第 {unsplashPage} 页</span>
+                <div className="flex items-center gap-2">
+                  <button
+                    type="button"
+                    disabled={!selectedCollectionId || unsplashPage <= 1 || unsplashLoading}
+                    onClick={() => loadUnsplashPhotos(selectedCollectionId, Math.max(1, unsplashPage - 1))}
+                    className="motion-btn-hover rounded-md border border-white/15 bg-white/5 px-2 py-0.5 disabled:cursor-not-allowed disabled:opacity-40"
+                  >
+                    上一页
+                  </button>
+                  <button
+                    type="button"
+                    disabled={!selectedCollectionId || !unsplashHasMore || unsplashLoading}
+                    onClick={() => loadUnsplashPhotos(selectedCollectionId, unsplashPage + 1)}
+                    className="motion-btn-hover rounded-md border border-white/15 bg-white/5 px-2 py-0.5 disabled:cursor-not-allowed disabled:opacity-40"
+                  >
+                    下一页
+                  </button>
+                </div>
+              </div>
               <div className="scrollbar-hidden grid max-h-44 min-h-44 grid-cols-4 gap-2 overflow-y-auto">
-                {unsplashPhotos.length > 0 ? (
+                {unsplashLoading ? (
+                  <div className="col-span-4 flex items-center justify-center text-xs text-slate-500">加载中...</div>
+                ) : unsplashPhotos.length > 0 ? (
                   unsplashPhotos.map(photo => (
+                    (() => {
+                      const selectedTarget = photo.full || photo.raw || photo.regular;
+                      const selected = isSelectedBackground(selectedTarget);
+                      return (
                     <button
                       type="button"
                       key={photo.id}
                       onClick={() =>
                         setLayoutData({ ...layoutData, backgroundImage: photo.full || photo.raw || photo.regular })
                       }
-                      className="motion-btn-hover overflow-hidden rounded-lg border border-white/15 bg-slate-900/70"
+                      className={`motion-btn-hover relative overflow-hidden rounded-lg border bg-slate-900/70 ${
+                        selected
+                          ? 'border-cyan-300/80 ring-2 ring-cyan-300/60 shadow-[0_0_0_1px_rgba(34,211,238,0.4)]'
+                          : 'border-white/15'
+                      }`}
                       title={photo.author ? `${photo.title || 'Unsplash'} · ${photo.author}` : photo.title || 'Unsplash'}
                     >
                       <img src={photo.thumb} alt={photo.title || 'unsplash'} className="h-14 w-full object-contain" />
+                      {selected ? (
+                        <span className="absolute right-1.5 top-1.5 rounded-full bg-cyan-400 px-1.5 py-0.5 text-[10px] font-semibold text-slate-900">
+                          已选
+                        </span>
+                      ) : null}
                     </button>
+                      );
+                    })()
                   ))
                 ) : (
                   <div className="col-span-4 flex items-center justify-center text-xs text-slate-500">
@@ -487,25 +543,39 @@ export default function CategoryEditForm() {
                   <p className="col-span-4 flex items-center justify-center text-xs text-slate-400">暂无匹配图片</p>
                 ) : (
                   mediaResults.map(item => (
+                    (() => {
+                      const selected = isSelectedBackground(item.url);
+                      return (
                     <button
                       type="button"
                       key={item.url}
                       onClick={() => setLayoutData({ ...layoutData, backgroundImage: item.url })}
-                      className="motion-btn-hover group flex flex-col items-center gap-2 rounded-xl border border-white/15 bg-slate-900/70 p-2 text-left"
+                      className={`motion-btn-hover group relative flex flex-col items-center gap-2 rounded-xl border bg-slate-900/70 p-2 text-left ${
+                        selected
+                          ? 'border-cyan-300/80 ring-2 ring-cyan-300/60 shadow-[0_0_0_1px_rgba(34,211,238,0.4)]'
+                          : 'border-white/15'
+                      }`}
                       title={item.name}
                     >
                       <div className="flex h-11 w-11 items-center justify-center rounded-xl bg-slate-800/80 ring-1 ring-white/10">
                         <img src={item.url} alt={item.name} className="h-7 w-7 rounded object-contain" />
                       </div>
                       <div className="w-full truncate text-center text-[10px] text-slate-300">{item.name}</div>
+                      {selected ? (
+                        <span className="absolute right-1.5 top-1.5 rounded-full bg-cyan-400 px-1.5 py-0.5 text-[10px] font-semibold text-slate-900">
+                          已选
+                        </span>
+                      ) : null}
                     </button>
+                      );
+                    })()
                   ))
                 )}
               </div>
             </div>
-          </>
-        ) : (
-          <>
+            </>
+          ) : (
+            <>
             <div>
               <label className="mb-1 block text-sm font-medium text-slate-200">分类名称</label>
               <input
@@ -550,10 +620,11 @@ export default function CategoryEditForm() {
                 ))}
               </div>
             </div>
-          </>
-        )}
+            </>
+          )}
+        </div>
 
-        <div className="flex gap-3 pt-4">
+        <div className={`flex gap-3 pt-4 ${isLayoutMode ? 'mt-4 shrink-0 border-t border-white/10 bg-slate-900/80' : ''}`}>
           {isEditing && !isLayoutMode && (
             <button
               type="button"

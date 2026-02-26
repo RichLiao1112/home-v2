@@ -67,8 +67,8 @@ export default function CardEditForm() {
   const effectiveCoverColor = formData.coverColor || selectedCategoryColor || '#3B82F6';
 
   return (
-    <div className="overflow-hidden rounded-2xl border border-white/15 bg-slate-900/90 shadow-2xl shadow-slate-950/60 backdrop-blur-xl">
-      <div className="flex items-center justify-between border-b border-white/10 bg-slate-900/80 px-6 py-4">
+    <div className="flex h-[min(86vh,860px)] flex-col overflow-hidden rounded-2xl border border-white/15 bg-slate-900/90 shadow-2xl shadow-slate-950/60 backdrop-blur-xl">
+      <div className="flex shrink-0 items-center justify-between border-b border-white/10 bg-slate-900/80 px-6 py-4">
         <div className="flex items-center gap-2">
           <Grid3X3 className="h-5 w-5 text-cyan-300" />
           <h2 className="text-lg font-semibold text-slate-100">{isEditing ? '编辑卡片' : '添加卡片'}</h2>
@@ -83,8 +83,9 @@ export default function CardEditForm() {
 
       <form
         onSubmit={handleSubmit}
-        className="p-6 space-y-4"
+        className="flex min-h-0 flex-1 flex-col p-6"
       >
+        <div className="scrollbar-hidden min-h-0 flex-1 space-y-4 overflow-y-auto pr-1">
         <div>
           <label className="mb-1 block text-sm font-medium text-slate-200">所属分类</label>
           <select
@@ -245,8 +246,10 @@ export default function CardEditForm() {
           />
           在新标签页打开
         </label>
+        </div>
 
-        <div className="flex gap-3 pt-4">
+        <div className="mt-4 shrink-0 border-t border-white/10 bg-slate-900/80 pt-4">
+        <div className="flex gap-3">
           {isEditing && (
             <button
               type="button"
@@ -271,6 +274,7 @@ export default function CardEditForm() {
           >
             {isEditing ? '保存' : '添加'}
           </button>
+        </div>
         </div>
       </form>
     </div>
