@@ -1,7 +1,7 @@
 'use client';
 
 import { useEffect, useMemo, useRef, useState, type ReactNode } from 'react';
-import { Globe, Network, Search, X } from 'lucide-react';
+import { Globe, KeyRound, Network, Search, X } from 'lucide-react';
 import { pinyin } from 'pinyin-pro';
 import type { Card } from '@/types';
 import { useAppStore } from '@/stores/appStore';
@@ -26,6 +26,10 @@ type RecentRecord = {
   lastOpenedAt: number;
   count: number;
 };
+
+type SearchResultItem =
+  | { kind: 'key'; key: string; score: number }
+  | { kind: 'card'; item: SearchItem; score: number };
 
 const normalize = (value: string) => value.toLowerCase().replace(/\s+/g, '').trim();
 
@@ -69,6 +73,15 @@ const getMatchScore = (query: string, item: SearchItem) => {
   if (initials.includes(query)) return 90;
   if (isFuzzyMatch(query, titleText)) return 70;
   if (isFuzzyMatch(query, normalizedText)) return 55;
+  return -1;
+};
+
+const getKeyMatchScore = (query: string, key: string) => {
+  const normalizedKey = normalize(key);
+  if (!query) return 180;
+  if (normalizedKey.startsWith(query)) return 180;
+  if (normalizedKey.includes(query)) return 160;
+  if (isFuzzyMatch(query, normalizedKey)) return 130;
   return -1;
 };
 
@@ -118,7 +131,7 @@ const highlightText = (text: string, keyword: string): ReactNode => {
 };
 
 export default function GlobalSearch() {
-  const { categories } = useAppStore();
+  const { categories, currentKey, configKeys, loadData } = useAppStore();
   const inputRef = useRef<HTMLInputElement | null>(null);
   const [open, setOpen] = useState(false);
   const [query, setQuery] = useState('');
@@ -163,7 +176,12 @@ export default function GlobalSearch() {
   }, [recentRecords]);
   const normalizedQuery = normalize(query);
   const rawQuery = query.trim();
-  const results = useMemo(() => {
+  const results = useMemo<SearchResultItem[]>(() => {
+    const keyEntries = configKeys
+      .map(key => ({ key, score: getKeyMatchScore(normalizedQuery, key) }))
+      .filter(entry => entry.score >= 0)
+      .sort((a, b) => b.score - a.score);
+
     if (!normalizedQuery) {
       const sortedRecent = recentRecords
         .slice()
@@ -172,15 +190,23 @@ export default function GlobalSearch() {
       const recentIds = new Set(sortedRecent.map(item => item.id));
       const recentItems = sortedRecent.map(record => itemMap.get(record.id)).filter((it): it is SearchItem => Boolean(it));
       const remainingItems = searchItems.filter(item => !recentIds.has(item.id));
-      return [...recentItems, ...remainingItems].slice(0, MAX_RESULTS);
+      const cardLimit = Math.max(0, MAX_RESULTS - keyEntries.length);
+      const cardResults = [...recentItems, ...remainingItems]
+        .slice(0, cardLimit)
+        .map(item => ({ kind: 'card' as const, item, score: 1 }));
+      const keyResults = keyEntries.map(entry => ({ kind: 'key' as const, key: entry.key, score: entry.score }));
+      return [...keyResults, ...cardResults];
     }
-    return searchItems
+    const cardLimit = Math.max(0, MAX_RESULTS - keyEntries.length);
+    const cardResults = searchItems
       .map(item => ({ item, score: getMatchScore(normalizedQuery, item) }))
       .filter(entry => entry.score >= 0)
       .sort((a, b) => b.score - a.score)
-      .slice(0, MAX_RESULTS)
-      .map(entry => entry.item);
-  }, [itemMap, normalizedQuery, recentRecords, searchItems]);
+      .slice(0, cardLimit)
+      .map(entry => ({ kind: 'card' as const, item: entry.item, score: entry.score }));
+    const keyResults = keyEntries.map(entry => ({ kind: 'key' as const, key: entry.key, score: entry.score }));
+    return [...keyResults, ...cardResults];
+  }, [configKeys, itemMap, normalizedQuery, recentRecords, searchItems]);
 
   const closeDialog = () => {
     setOpen(false);
@@ -214,6 +240,20 @@ export default function GlobalSearch() {
     closeDialog();
   };
 
+  const switchConfigKey = async (key: string) => {
+    if (!key || key === currentKey) {
+      closeDialog();
+      return;
+    }
+    if (typeof window !== 'undefined') {
+      const url = new URL(window.location.href);
+      url.searchParams.set('key', key);
+      window.history.replaceState(null, '', `${url.pathname}${url.search}${url.hash}`);
+    }
+    await loadData(key);
+    closeDialog();
+  };
+
   useEffect(() => {
     const onKeyDown = (event: KeyboardEvent) => {
       const key = event.key.toLowerCase();
@@ -244,7 +284,12 @@ export default function GlobalSearch() {
       if (key === 'enter') {
         event.preventDefault();
         const target = results[activeIndex];
-        if (target) openCardLink(target, 'best');
+        if (!target) return;
+        if (target.kind === 'key') {
+          void switchConfigKey(target.key);
+          return;
+        }
+        openCardLink(target.item, 'best');
       }
     };
 
@@ -256,7 +301,7 @@ export default function GlobalSearch() {
       window.removeEventListener('keydown', onKeyDown);
       window.removeEventListener(OPEN_SEARCH_EVENT, onOpenSearch);
     };
-  }, [activeIndex, open, results]);
+  }, [activeIndex, currentKey, loadData, open, results]);
 
   useEffect(() => {
     setActiveIndex(0);
@@ -287,18 +332,53 @@ export default function GlobalSearch() {
           </button>
         </div>
         <div className="mt-2 text-[11px] text-slate-500">
-          快捷键：`/` 或 `Ctrl+K`，回车打开，方向键切换。空搜索时优先显示最近打开项。
+          快捷键：`/` 或 `Ctrl+K`，回车执行，方向键切换。可直接搜索配置 key 并回车切换。
         </div>
 
         <div className="scrollbar-hidden mt-3 max-h-[min(58vh,560px)] overflow-y-auto rounded-xl border border-white/10 bg-white/5">
           {results.length === 0 ? (
             <div className="px-4 py-12 text-center text-sm text-slate-400">没有找到匹配项</div>
           ) : (
-            results.map((item, index) => {
+            results.map((result, index) => {
               const active = index === activeIndex;
+              if (result.kind === 'key') {
+                const isCurrent = result.key === currentKey;
+                return (
+                  <div
+                    key={`key-${result.key}`}
+                    onMouseEnter={() => setActiveIndex(index)}
+                    className={`flex items-center justify-between gap-3 border-b border-white/10 px-3 py-2.5 text-left last:border-b-0 ${
+                      active ? 'bg-cyan-500/15' : 'hover:bg-white/10'
+                    }`}
+                  >
+                    <button
+                      type="button"
+                      onClick={() => void switchConfigKey(result.key)}
+                      className="min-w-0 flex-1 text-left"
+                    >
+                      <div className="truncate text-sm text-slate-100">{highlightText(result.key, rawQuery)}</div>
+                      <div className="truncate text-xs text-slate-400">配置切换</div>
+                    </button>
+                    <div className="flex shrink-0 items-center gap-1">
+                      <span
+                        className={`inline-flex items-center gap-1 rounded-md border px-2 py-1 text-[11px] ${
+                          isCurrent
+                            ? 'border-cyan-300/40 bg-cyan-500/20 text-cyan-100'
+                            : 'border-white/15 bg-white/5 text-slate-200'
+                        }`}
+                      >
+                        <KeyRound className="h-3 w-3" />
+                        {isCurrent ? '当前配置' : '切换到此配置'}
+                      </span>
+                    </div>
+                  </div>
+                );
+              }
+
+              const item = result.item;
               return (
                 <div
-                  key={item.id}
+                  key={`card-${item.id}`}
                   onMouseEnter={() => setActiveIndex(index)}
                   className={`flex items-center justify-between gap-3 border-b border-white/10 px-3 py-2.5 text-left last:border-b-0 ${
                     active ? 'bg-cyan-500/15' : 'hover:bg-white/10'
