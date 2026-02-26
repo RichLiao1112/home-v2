@@ -25,10 +25,14 @@ WORKDIR /app
 
 ENV NODE_ENV=production
 ENV NEXT_TELEMETRY_DISABLED=1
+ENV APP_PORT=3000
 
 # Create non-root user
 RUN addgroup --system --gid 1001 nodejs
 RUN adduser --system --uid 1001 nextjs
+
+# Install nginx for single-container reverse proxy
+RUN apk add --no-cache nginx
 
 # Copy necessary files from builder
 # `public` directory may be absent in this project, create an empty fallback.
@@ -41,13 +45,15 @@ RUN mkdir -p /app/data /app/media && chown -R nextjs:nodejs /app/data /app/media
 # Bundle default static media assets into image
 COPY --from=builder --chown=nextjs:nodejs /app/media/imgs /app/media/imgs
 
-USER nextjs
+COPY ./docker/nginx-single.conf /etc/nginx/http.d/default.conf
+COPY ./docker/entrypoint.sh /entrypoint.sh
+RUN chmod +x /entrypoint.sh && mkdir -p /run/nginx /var/lib/nginx/tmp
 
-EXPOSE 3000
+EXPOSE 80
 
 ENV PORT=3000
 ENV HOSTNAME="0.0.0.0"
 ENV DATA_DIR="/app/data"
 ENV MEDIA_DIR="/app/media"
 
-CMD ["node", "server.js"]
+CMD ["/entrypoint.sh"]
