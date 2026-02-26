@@ -40,7 +40,7 @@ export default function CategoryEditForm() {
   const [mediaQuery, setMediaQuery] = useState('');
   const [mediaLoading, setMediaLoading] = useState(false);
   const [mediaResults, setMediaResults] = useState<Array<{ name: string; url: string }>>([]);
-  const [unsplashQuery, setUnsplashQuery] = useState('dark abstract');
+  const [unsplashQuery, setUnsplashQuery] = useState('');
   const [unsplashCollections, setUnsplashCollections] = useState<
     Array<{ id: string; title: string; totalPhotos: number; cover: string }>
   >([]);
@@ -222,11 +222,13 @@ export default function CategoryEditForm() {
                       type="button"
                       key={item.url}
                       onClick={() => setLayoutData({ ...layoutData, backgroundImage: item.url })}
-                      className="motion-btn-hover group overflow-hidden rounded-lg border border-white/15 bg-slate-900/70 text-left"
+                      className="motion-btn-hover group flex flex-col items-center gap-2 rounded-xl border border-white/15 bg-slate-900/70 p-2 text-left"
                       title={item.name}
                     >
-                      <img src={item.url} alt={item.name} className="h-14 w-full object-cover" />
-                      <div className="truncate px-2 py-1 text-[10px] text-slate-300">{item.name}</div>
+                      <div className="flex h-11 w-11 items-center justify-center rounded-xl bg-slate-800/80 ring-1 ring-white/10">
+                        <img src={item.url} alt={item.name} className="h-7 w-7 rounded object-cover" />
+                      </div>
+                      <div className="w-full truncate text-center text-[10px] text-slate-300">{item.name}</div>
                     </button>
                   ))
                 )}

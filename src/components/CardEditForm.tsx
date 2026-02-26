@@ -197,10 +197,13 @@ export default function CardEditForm() {
                     key={item.url}
                     type="button"
                     onClick={() => setFormData({ ...formData, cover: item.url })}
-                    className="motion-btn-hover overflow-hidden rounded-lg border border-white/15 bg-slate-900/70"
+                    className="motion-btn-hover flex flex-col items-center gap-2 rounded-xl border border-white/15 bg-slate-900/70 p-2"
                     title={item.name}
                   >
-                    <img src={item.url} alt={item.name} className="h-14 w-full object-cover" />
+                    <div className="flex h-11 w-11 items-center justify-center rounded-xl bg-slate-800/80 ring-1 ring-white/10">
+                      <img src={item.url} alt={item.name} className="h-7 w-7 rounded object-cover" />
+                    </div>
+                    <div className="w-full truncate text-center text-[10px] text-slate-300">{item.name}</div>
                   </button>
                 ))
               )}
