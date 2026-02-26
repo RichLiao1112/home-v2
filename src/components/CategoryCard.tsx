@@ -2,20 +2,8 @@
 
 import { Category, Card } from '@/types';
 import { useAppStore } from '@/stores/appStore';
-import {
-  Edit2,
-  GripVertical,
-  Link2,
-  Network,
-  Plus,
-  Trash2,
-  Globe,
-} from 'lucide-react';
-import {
-  SortableContext,
-  rectSortingStrategy,
-  useSortable,
-} from '@dnd-kit/sortable';
+import { Edit2, GripVertical, Link2, Network, Plus, Trash2, Globe } from 'lucide-react';
+import { SortableContext, rectSortingStrategy, useSortable } from '@dnd-kit/sortable';
 import { CSS } from '@dnd-kit/utilities';
 import { DndContext, PointerSensor, closestCenter, useSensor, useSensors, type DragEndEvent } from '@dnd-kit/core';
 import { getBestCardLink } from '@/lib/utils';
@@ -35,15 +23,7 @@ const DESKTOP_GRID_CLASS: Record<number, string> = {
   8: 'lg:grid-cols-4 xl:grid-cols-6 2xl:grid-cols-8',
 };
 
-function SortableCard({
-  categoryId,
-  card,
-  color,
-}: {
-  categoryId: string;
-  card: Card;
-  color: string;
-}) {
+function SortableCard({ categoryId, card, color }: { categoryId: string; card: Card; color: string }) {
   const { setEditingCard, deleteCard } = useAppStore();
   const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({
     id: card.id,
@@ -113,7 +93,11 @@ function SortableCard({
             style={resolvedIconColor ? { backgroundColor: resolvedIconColor } : undefined}
           >
             {card.cover ? (
-              <img src={card.cover} alt={`${card.title} 图标`} className="h-6 w-6 rounded object-contain sm:h-7 sm:w-7" />
+              <img
+                src={card.cover}
+                alt={`${card.title} 图标`}
+                className="h-6 w-6 rounded object-contain sm:h-7 sm:w-7"
+              />
             ) : (
               <Link2 className="h-4 w-4 sm:h-5 sm:w-5" />
             )}
@@ -135,7 +119,7 @@ function SortableCard({
         <button
           type="button"
           disabled={!card.lanLink}
-          onClick={(event) => {
+          onClick={event => {
             event.stopPropagation();
             onOpenSpecificLink(card.lanLink);
           }}
@@ -152,7 +136,7 @@ function SortableCard({
         <button
           type="button"
           disabled={!card.wanLink}
-          onClick={(event) => {
+          onClick={event => {
             event.stopPropagation();
             onOpenSpecificLink(card.wanLink);
           }}
@@ -249,11 +233,23 @@ export default function CategoryCard({ category }: CategoryCardProps) {
         </div>
       </div>
 
-      <DndContext sensors={sensors} collisionDetection={closestCenter} onDragEnd={onCardDragEnd}>
-        <SortableContext items={cards.map((card) => card.id)} strategy={rectSortingStrategy}>
+      <DndContext
+        sensors={sensors}
+        collisionDetection={closestCenter}
+        onDragEnd={onCardDragEnd}
+      >
+        <SortableContext
+          items={cards.map(card => card.id)}
+          strategy={rectSortingStrategy}
+        >
           <div className={`grid grid-cols-2 gap-3 md:grid-cols-4 ${DESKTOP_GRID_CLASS[desktopColumns]}`}>
-            {cards.map((card) => (
-              <SortableCard key={card.id} categoryId={category.id} card={card} color={category.color} />
+            {cards.map(card => (
+              <SortableCard
+                key={card.id}
+                categoryId={category.id}
+                card={card}
+                color={category.color}
+              />
             ))}
           </div>
         </SortableContext>

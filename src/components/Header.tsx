@@ -6,10 +6,17 @@ import { useRouter } from 'next/navigation';
 import { createPortal } from 'react-dom';
 import { useAuthStore } from '@/stores/authStore';
 import { useAppStore } from '@/stores/appStore';
-import { apiCreateSnapshot, apiDeleteSnapshot, apiListSnapshots, apiRestoreSnapshot, type SnapshotMeta } from '@/lib/api';
-import { History, KeyRound, LayoutPanelTop, Loader2, LogOut, Plus, Sparkles, Trash2 } from 'lucide-react';
+import {
+  apiCreateSnapshot,
+  apiDeleteSnapshot,
+  apiListSnapshots,
+  apiRestoreSnapshot,
+  type SnapshotMeta,
+} from '@/lib/api';
+import { History, KeyRound, LayoutPanelTop, Loader2, LogOut, Plus, Search, Sparkles, Trash2 } from 'lucide-react';
 
 export default function Header() {
+  const OPEN_SEARCH_EVENT = 'home-v2:open-search';
   const SCROLL_ENTER_Y = 40;
   const SCROLL_EXIT_Y = 16;
   const router = useRouter();
@@ -30,12 +37,15 @@ export default function Header() {
     setSnapshotLoading(false);
   }, [currentKey]);
 
-  const updateUrlKey = useCallback((key: string) => {
-    if (typeof window === 'undefined') return;
-    const url = new URL(window.location.href);
-    url.searchParams.set('key', key);
-    router.replace(`${url.pathname}${url.search}${url.hash}`, { scroll: false });
-  }, [router]);
+  const updateUrlKey = useCallback(
+    (key: string) => {
+      if (typeof window === 'undefined') return;
+      const url = new URL(window.location.href);
+      url.searchParams.set('key', key);
+      router.replace(`${url.pathname}${url.search}${url.hash}`, { scroll: false });
+    },
+    [router],
+  );
 
   const handleSelectKey = (key: string) => {
     if (!key || key === currentKey) return;
@@ -52,6 +62,11 @@ export default function Header() {
   const handleDeleteKey = async () => {
     if (!window.confirm(`确认删除配置 "${currentKey}" 吗？`)) return;
     await deleteConfigKey(currentKey);
+  };
+
+  const openGlobalSearch = () => {
+    if (typeof window === 'undefined') return;
+    window.dispatchEvent(new Event(OPEN_SEARCH_EVENT));
   };
 
   useEffect(() => {
@@ -190,10 +205,10 @@ export default function Header() {
                         <div className="truncate text-sm text-slate-100">
                           {new Date(item.createdAt).toLocaleString()}
                         </div>
-                      <div className="truncate text-xs text-slate-400">
-                        {formatSnapshotReason(item.reason)}
-                        {item.note ? ` · ${item.note}` : ''}
-                      </div>
+                        <div className="truncate text-xs text-slate-400">
+                          {formatSnapshotReason(item.reason)}
+                          {item.note ? ` · ${item.note}` : ''}
+                        </div>
                       </div>
                       <div className="flex shrink-0 items-center gap-2">
                         <button
@@ -217,7 +232,7 @@ export default function Header() {
               </div>
             </div>
           </div>,
-          document.body
+          document.body,
         )
       : null;
 
@@ -252,13 +267,18 @@ export default function Header() {
               <h1 className="truncate text-base font-semibold text-slate-100 sm:text-lg">
                 {layout.head?.name || 'Home'}
               </h1>
-              <p className="hidden truncate text-xs text-slate-400 sm:block">
-                {layout.head?.subtitle || ''}
-              </p>
+              <p className="hidden truncate text-xs text-slate-400 sm:block">{layout.head?.subtitle || ''}</p>
             </div>
           </div>
 
           <div className="flex items-center gap-2 sm:hidden">
+            <button
+              onClick={openGlobalSearch}
+              className="motion-btn-hover inline-flex h-9 w-9 items-center justify-center rounded-xl border border-white/15 bg-white/5 text-slate-200"
+              aria-label="打开全局搜索"
+            >
+              <Search className="h-4 w-4" />
+            </button>
             <button
               onClick={() =>
                 setEditingCategory({
@@ -283,6 +303,16 @@ export default function Header() {
           </div>
 
           <div className="hidden items-center gap-2 sm:flex">
+            <button
+              onClick={openGlobalSearch}
+              className="motion-btn-hover inline-flex h-10 cursor-pointer items-center gap-2 whitespace-nowrap rounded-xl border border-white/15 bg-white/5 px-3 text-sm text-slate-200 transition hover:bg-white/10"
+            >
+              <Search className="h-4 w-4" />
+              <span>搜索</span>
+              <span className="rounded-md border border-white/15 bg-white/5 px-1.5 py-0.5 text-[10px] text-slate-400">
+                Ctrl+K
+              </span>
+            </button>
             <div className="flex max-w-full items-center gap-2 rounded-xl border border-white/15 bg-white/5 px-2 py-1.5">
               <KeyRound className="h-4 w-4 text-slate-300" />
               <select

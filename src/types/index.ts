@@ -162,8 +162,7 @@ export const normalizeData = (payload: AppData | Record<string, unknown>): AppDa
     ...category,
     id: category.id || uuidv4(),
     title: category.title || `分类 ${categoryIndex + 1}`,
-    color:
-      typeof category.color === 'string' ? category.color : DEFAULT_COLORS[categoryIndex % DEFAULT_COLORS.length],
+    color: typeof category.color === 'string' ? category.color : DEFAULT_COLORS[categoryIndex % DEFAULT_COLORS.length],
     position: category.position ?? categoryIndex,
     cards: (category.cards || []).map((card, cardIndex) => ({
       ...card,

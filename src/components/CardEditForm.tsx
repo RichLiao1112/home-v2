@@ -86,195 +86,199 @@ export default function CardEditForm() {
         className="flex min-h-0 flex-1 flex-col p-6"
       >
         <div className="scrollbar-hidden min-h-0 flex-1 space-y-4 overflow-y-auto pr-1">
-        <div>
-          <label className="mb-1 block text-sm font-medium text-slate-200">所属分类</label>
-          <select
-            value={formData.categoryId}
-            onChange={e => setFormData({ ...formData, categoryId: e.target.value })}
-            className={fieldClassName}
-          >
-            {categories.map(cat => (
-              <option
-                key={cat.id}
-                value={cat.id}
-              >
-                {cat.title}
-              </option>
-            ))}
-          </select>
-        </div>
+          <div>
+            <label className="mb-1 block text-sm font-medium text-slate-200">所属分类</label>
+            <select
+              value={formData.categoryId}
+              onChange={e => setFormData({ ...formData, categoryId: e.target.value })}
+              className={fieldClassName}
+            >
+              {categories.map(cat => (
+                <option
+                  key={cat.id}
+                  value={cat.id}
+                >
+                  {cat.title}
+                </option>
+              ))}
+            </select>
+          </div>
 
-        <div>
-          <label className="mb-1 block text-sm font-medium text-slate-200">卡片名称</label>
-          <input
-            type="text"
-            value={formData.title}
-            onChange={e => setFormData({ ...formData, title: e.target.value })}
-            placeholder="例如：GitHub、Gmail、Dashboard"
-            className={fieldClassName}
-            autoFocus
-          />
-        </div>
-
-        <div>
-          <label className="mb-1 flex items-center gap-1 text-sm font-medium text-slate-200">
-            <Link className="h-4 w-4" />
-            公网地址（WAN）
-          </label>
-          <input
-            type="url"
-            value={formData.wanLink}
-            onChange={e => setFormData({ ...formData, wanLink: e.target.value })}
-            placeholder="https://example.com"
-            className={fieldClassName}
-          />
-        </div>
-
-        <div>
-          <label className="mb-1 flex items-center gap-1 text-sm font-medium text-slate-200">
-            <FileText className="h-4 w-4" />
-            备注（可选）
-          </label>
-          <input
-            type="text"
-            value={formData.description}
-            onChange={e => setFormData({ ...formData, description: e.target.value })}
-            placeholder="给这个卡片添加备注信息"
-            className={fieldClassName}
-          />
-        </div>
-
-        <div>
-          <label className="mb-1 flex items-center gap-1 text-sm font-medium text-slate-200">
-            <Link className="h-4 w-4" />
-            内网地址（LAN，可选）
-          </label>
-          <input
-            type="url"
-            value={formData.lanLink}
-            onChange={e => setFormData({ ...formData, lanLink: e.target.value })}
-            placeholder="http://192.168.x.x:3000"
-            className={fieldClassName}
-          />
-        </div>
-
-        <div>
-          <label className="mb-1 block text-sm font-medium text-slate-200">图标 URL（可选）</label>
-          <div className="flex gap-2">
+          <div>
+            <label className="mb-1 block text-sm font-medium text-slate-200">卡片名称</label>
             <input
               type="text"
-              value={formData.cover}
-              onChange={e => setFormData({ ...formData, cover: e.target.value })}
-              placeholder="https://... 或 /assets/xxx.png"
+              value={formData.title}
+              onChange={e => setFormData({ ...formData, title: e.target.value })}
+              placeholder="例如：GitHub、Gmail、Dashboard"
+              className={fieldClassName}
+              autoFocus
+            />
+          </div>
+
+          <div>
+            <label className="mb-1 flex items-center gap-1 text-sm font-medium text-slate-200">
+              <Link className="h-4 w-4" />
+              公网地址（WAN）
+            </label>
+            <input
+              type="url"
+              value={formData.wanLink}
+              onChange={e => setFormData({ ...formData, wanLink: e.target.value })}
+              placeholder="https://example.com"
               className={fieldClassName}
             />
-            <label className="motion-btn-hover inline-flex cursor-pointer items-center gap-2 whitespace-nowrap rounded-xl border border-white/15 bg-white/5 px-3 py-2 text-sm text-slate-200 transition hover:bg-white/10">
-              {uploading ? <Loader2 className="h-4 w-4 animate-spin" /> : <Upload className="h-4 w-4" />}
-              上传
-              <input
-                type="file"
-                accept="image/*"
-                className="hidden"
-                onChange={e => onUpload(e.target.files?.[0] || null)}
-              />
-            </label>
           </div>
-          <div className="mt-3 space-y-2 rounded-xl border border-white/10 bg-white/5 p-3">
-            <label className="mb-1 block text-xs text-slate-300">搜索已上传图片（用于图标）</label>
-            <div className="relative">
-              <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-500" />
+
+          <div>
+            <label className="mb-1 flex items-center gap-1 text-sm font-medium text-slate-200">
+              <FileText className="h-4 w-4" />
+              备注（可选）
+            </label>
+            <input
+              type="text"
+              value={formData.description}
+              onChange={e => setFormData({ ...formData, description: e.target.value })}
+              placeholder="给这个卡片添加备注信息"
+              className={fieldClassName}
+            />
+          </div>
+
+          <div>
+            <label className="mb-1 flex items-center gap-1 text-sm font-medium text-slate-200">
+              <Link className="h-4 w-4" />
+              内网地址（LAN，可选）
+            </label>
+            <input
+              type="url"
+              value={formData.lanLink}
+              onChange={e => setFormData({ ...formData, lanLink: e.target.value })}
+              placeholder="http://192.168.x.x:3000"
+              className={fieldClassName}
+            />
+          </div>
+
+          <div>
+            <label className="mb-1 block text-sm font-medium text-slate-200">图标 URL（可选）</label>
+            <div className="flex gap-2">
               <input
                 type="text"
-                value={mediaQuery}
-                onChange={e => setMediaQuery(e.target.value)}
-                placeholder="按文件名搜索"
-                className={`${fieldClassName} pl-9`}
+                value={formData.cover}
+                onChange={e => setFormData({ ...formData, cover: e.target.value })}
+                placeholder="https://... 或 /assets/xxx.png"
+                className={fieldClassName}
               />
+              <label className="motion-btn-hover inline-flex cursor-pointer items-center gap-2 whitespace-nowrap rounded-xl border border-white/15 bg-white/5 px-3 py-2 text-sm text-slate-200 transition hover:bg-white/10">
+                {uploading ? <Loader2 className="h-4 w-4 animate-spin" /> : <Upload className="h-4 w-4" />}
+                上传
+                <input
+                  type="file"
+                  accept="image/*"
+                  className="hidden"
+                  onChange={e => onUpload(e.target.files?.[0] || null)}
+                />
+              </label>
             </div>
-            <div className="scrollbar-hidden grid max-h-40 grid-cols-4 gap-2 overflow-y-auto">
-              {mediaResults.length === 0 ? (
-                <p className="col-span-4 text-xs text-slate-400">暂无匹配图片</p>
-              ) : (
-                mediaResults.map(item => (
-                  <button
-                    key={item.url}
-                    type="button"
-                    onClick={() => setFormData({ ...formData, cover: item.url })}
-                    className="motion-btn-hover flex flex-col items-center gap-2 rounded-xl border border-white/15 bg-slate-900/70 p-2"
-                    title={item.name}
-                  >
-                    <div className="flex h-11 w-11 items-center justify-center rounded-xl bg-slate-800/80 ring-1 ring-white/10">
-                      <img src={item.url} alt={item.name} className="h-7 w-7 rounded object-contain" />
-                    </div>
-                    <div className="w-full truncate text-center text-[10px] text-slate-300">{item.name}</div>
-                  </button>
-                ))
-              )}
+            <div className="mt-3 space-y-2 rounded-xl border border-white/10 bg-white/5 p-3">
+              <label className="mb-1 block text-xs text-slate-300">搜索已上传图片（用于图标）</label>
+              <div className="relative">
+                <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-500" />
+                <input
+                  type="text"
+                  value={mediaQuery}
+                  onChange={e => setMediaQuery(e.target.value)}
+                  placeholder="按文件名搜索"
+                  className={`${fieldClassName} pl-9`}
+                />
+              </div>
+              <div className="scrollbar-hidden grid max-h-40 grid-cols-4 gap-2 overflow-y-auto">
+                {mediaResults.length === 0 ? (
+                  <p className="col-span-4 text-xs text-slate-400">暂无匹配图片</p>
+                ) : (
+                  mediaResults.map(item => (
+                    <button
+                      key={item.url}
+                      type="button"
+                      onClick={() => setFormData({ ...formData, cover: item.url })}
+                      className="motion-btn-hover flex flex-col items-center gap-2 rounded-xl border border-white/15 bg-slate-900/70 p-2"
+                      title={item.name}
+                    >
+                      <div className="flex h-11 w-11 items-center justify-center rounded-xl bg-slate-800/80 ring-1 ring-white/10">
+                        <img
+                          src={item.url}
+                          alt={item.name}
+                          className="h-7 w-7 rounded object-contain"
+                        />
+                      </div>
+                      <div className="w-full truncate text-center text-[10px] text-slate-300">{item.name}</div>
+                    </button>
+                  ))
+                )}
+              </div>
             </div>
           </div>
-        </div>
 
-        <div>
-          <label className="mb-1 block text-sm font-medium text-slate-200">图标底色</label>
-          <div className="flex items-center gap-2">
+          <div>
+            <label className="mb-1 block text-sm font-medium text-slate-200">图标底色</label>
+            <div className="flex items-center gap-2">
+              <input
+                type="color"
+                value={effectiveCoverColor}
+                onChange={e => setFormData({ ...formData, coverColor: e.target.value })}
+                className="h-10 w-24 cursor-pointer rounded-xl bg-slate-900/70"
+              />
+              <button
+                type="button"
+                onClick={() => setFormData({ ...formData, coverColor: '' })}
+                className={`motion-btn-hover whitespace-nowrap rounded-xl border px-3 py-2 text-xs ${
+                  formData.coverColor === ''
+                    ? 'border-cyan-300/60 bg-cyan-500/15 text-cyan-100'
+                    : 'border-white/15 bg-white/5 text-slate-300 hover:bg-white/10'
+                }`}
+              >
+                使用分类颜色
+              </button>
+            </div>
+          </div>
+
+          <label className="flex cursor-pointer items-center gap-2 rounded-xl border border-white/15 bg-slate-900/70 p-3 text-sm text-slate-200">
             <input
-              type="color"
-              value={effectiveCoverColor}
-              onChange={e => setFormData({ ...formData, coverColor: e.target.value })}
-              className="h-10 w-24 cursor-pointer rounded-xl bg-slate-900/70"
+              type="checkbox"
+              checked={formData.openInNewWindow}
+              onChange={e => setFormData({ ...formData, openInNewWindow: e.target.checked })}
+              className="h-4 w-4 accent-cyan-400"
             />
-            <button
-              type="button"
-              onClick={() => setFormData({ ...formData, coverColor: '' })}
-              className={`motion-btn-hover whitespace-nowrap rounded-xl border px-3 py-2 text-xs ${
-                formData.coverColor === ''
-                  ? 'border-cyan-300/60 bg-cyan-500/15 text-cyan-100'
-                  : 'border-white/15 bg-white/5 text-slate-300 hover:bg-white/10'
-              }`}
-            >
-              使用分类颜色
-            </button>
-          </div>
-        </div>
-
-        <label className="flex cursor-pointer items-center gap-2 rounded-xl border border-white/15 bg-slate-900/70 p-3 text-sm text-slate-200">
-          <input
-            type="checkbox"
-            checked={formData.openInNewWindow}
-            onChange={e => setFormData({ ...formData, openInNewWindow: e.target.checked })}
-            className="h-4 w-4 accent-cyan-400"
-          />
-          在新标签页打开
-        </label>
+            在新标签页打开
+          </label>
         </div>
 
         <div className="mt-4 shrink-0 border-t border-white/10 bg-slate-900/80 pt-4">
-        <div className="flex gap-3">
-          {isEditing && (
+          <div className="flex gap-3">
+            {isEditing && (
+              <button
+                type="button"
+                onClick={handleDelete}
+                className="motion-btn-hover whitespace-nowrap rounded-xl px-4 py-2 text-slate-300 transition-colors hover:bg-rose-500/15 hover:text-rose-200"
+              >
+                删除
+              </button>
+            )}
+            <div className="flex-1"></div>
             <button
               type="button"
-              onClick={handleDelete}
-              className="motion-btn-hover whitespace-nowrap rounded-xl px-4 py-2 text-slate-300 transition-colors hover:bg-rose-500/15 hover:text-rose-200"
+              onClick={() => setEditingCard(null)}
+              className="motion-btn-hover whitespace-nowrap rounded-xl px-4 py-2 text-slate-200 transition-colors hover:bg-white/10"
             >
-              删除
+              取消
             </button>
-          )}
-          <div className="flex-1"></div>
-          <button
-            type="button"
-            onClick={() => setEditingCard(null)}
-            className="motion-btn-hover whitespace-nowrap rounded-xl px-4 py-2 text-slate-200 transition-colors hover:bg-white/10"
-          >
-            取消
-          </button>
-          <button
-            type="submit"
-            disabled={!formData.title.trim() || (!formData.wanLink.trim() && !formData.lanLink.trim())}
-            className="motion-btn-hover whitespace-nowrap rounded-xl bg-gradient-to-r from-blue-500 to-indigo-600 px-6 py-2 text-white hover:shadow-lg hover:shadow-blue-500/25 disabled:cursor-not-allowed disabled:opacity-50"
-          >
-            {isEditing ? '保存' : '添加'}
-          </button>
-        </div>
+            <button
+              type="submit"
+              disabled={!formData.title.trim() || (!formData.wanLink.trim() && !formData.lanLink.trim())}
+              className="motion-btn-hover whitespace-nowrap rounded-xl bg-gradient-to-r from-blue-500 to-indigo-600 px-6 py-2 text-white hover:shadow-lg hover:shadow-blue-500/25 disabled:cursor-not-allowed disabled:opacity-50"
+            >
+              {isEditing ? '保存' : '添加'}
+            </button>
+          </div>
         </div>
       </form>
     </div>

@@ -8,10 +8,7 @@ const DATA_DIR = process.env.DATA_DIR || path.join(process.cwd(), 'data');
 const MEDIA_DIR = process.env.MEDIA_DIR || path.join(process.cwd(), 'media');
 const DATA_FILE = process.env.DATA_FILE || 'home.json';
 const SNAPSHOT_FILE = process.env.SNAPSHOT_FILE || 'snapshots.json';
-const SNAPSHOT_MAX_PER_KEY = Math.min(
-  Math.max(Number(process.env.SNAPSHOT_MAX_PER_KEY || 30), 5),
-  200
-);
+const SNAPSHOT_MAX_PER_KEY = Math.min(Math.max(Number(process.env.SNAPSHOT_MAX_PER_KEY || 30), 5), 200);
 
 export const getDataFilePath = () => path.join(DATA_DIR, DATA_FILE);
 const getSnapshotFilePath = () => path.join(DATA_DIR, SNAPSHOT_FILE);
@@ -67,7 +64,7 @@ const normalizeDb = (payload: unknown): AppDB => {
   const mapped = Object.fromEntries(
     entries
       .filter(([, value]) => value && typeof value === 'object')
-      .map(([key, value]) => [key, normalizeData(value as AppData | Record<string, unknown>)])
+      .map(([key, value]) => [key, normalizeData(value as AppData | Record<string, unknown>)]),
   ) as AppDB;
 
   if (Object.keys(mapped).length === 0) {
@@ -83,7 +80,7 @@ const normalizeSnapshotDb = (payload: unknown): SnapshotDB => {
   for (const [key, value] of Object.entries(raw)) {
     if (!Array.isArray(value)) continue;
     const items = value
-      .map((item) => {
+      .map(item => {
         if (!item || typeof item !== 'object') return null;
         const record = item as Partial<SnapshotItem>;
         if (!record.id || !record.createdAt || !record.hash || !record.data) return null;
@@ -130,9 +127,7 @@ export const readAppDB = async (): Promise<AppDB> => {
 export const writeAppDB = async (payload: AppDB) => {
   await ensureDir(DATA_DIR);
   const filePath = getDataFilePath();
-  const normalized = Object.fromEntries(
-    Object.entries(payload).map(([key, value]) => [key, normalizeData(value)])
-  );
+  const normalized = Object.fromEntries(Object.entries(payload).map(([key, value]) => [key, normalizeData(value)]));
   await writeFile(filePath, JSON.stringify(normalized, null, 2), 'utf-8');
 };
 
@@ -155,14 +150,16 @@ const writeSnapshotDB = async (payload: SnapshotDB) => {
 };
 
 const computeDataHash = (data: AppData) => {
-  return createHash('sha256').update(JSON.stringify(normalizeData(data))).digest('hex');
+  return createHash('sha256')
+    .update(JSON.stringify(normalizeData(data)))
+    .digest('hex');
 };
 
 const pushSnapshot = async (
   key: string,
   data: AppData,
   reason: SnapshotReason,
-  note?: string
+  note?: string,
 ): Promise<{ created: boolean; snapshot?: SnapshotMeta }> => {
   const db = await readSnapshotDB();
   const list = db[key] || [];
@@ -238,7 +235,7 @@ export const deleteSnapshot = async (targetKey: string, snapshotId: string) => {
   const result = await readAppData(targetKey);
   const db = await readSnapshotDB();
   const current = db[result.key] || [];
-  const next = current.filter((item) => item.id !== snapshotId);
+  const next = current.filter(item => item.id !== snapshotId);
   if (next.length === current.length) {
     return { success: false, message: '快照不存在' };
   }
@@ -251,7 +248,7 @@ export const deleteSnapshot = async (targetKey: string, snapshotId: string) => {
 export const restoreSnapshot = async (targetKey: string, snapshotId: string) => {
   const current = await readAppData(targetKey);
   const db = await readSnapshotDB();
-  const match = (db[current.key] || []).find((item) => item.id === snapshotId);
+  const match = (db[current.key] || []).find(item => item.id === snapshotId);
   if (!match) {
     return { success: false, message: '快照不存在' };
   }

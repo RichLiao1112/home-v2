@@ -18,6 +18,7 @@ const COLORS = [
   '#6366F1',
 ];
 const UNSPLASH_PER_PAGE = 24;
+type UnsplashQuality = 'thumb' | 'regular' | 'full' | 'raw';
 
 export default function CategoryEditForm() {
   const { editingCategory, setEditingCategory, addCategory, updateCategory, deleteCategory, layout, updateLayout } =
@@ -55,6 +56,7 @@ export default function CategoryEditForm() {
   const [unsplashPage, setUnsplashPage] = useState(1);
   const [unsplashLoading, setUnsplashLoading] = useState(false);
   const [unsplashHasMore, setUnsplashHasMore] = useState(false);
+  const [unsplashQuality, setUnsplashQuality] = useState<UnsplashQuality>('full');
   const savedUnsplashCollectionId = layout.head?.unsplashCollectionId || '';
 
   useEffect(() => {
@@ -170,6 +172,18 @@ export default function CategoryEditForm() {
     return String(Math.min(40, Math.max(0, Math.round(next))));
   };
   const isSelectedBackground = (url: string) => layoutData.backgroundImage.trim() === url.trim();
+  const resolveUnsplashUrl = (
+    photo: { thumb: string; regular: string; full: string; raw: string },
+    quality: UnsplashQuality
+  ) => {
+    const byQuality: Record<UnsplashQuality, Array<string>> = {
+      thumb: [photo.thumb, photo.regular, photo.full, photo.raw],
+      regular: [photo.regular, photo.full, photo.raw, photo.thumb],
+      full: [photo.full, photo.raw, photo.regular, photo.thumb],
+      raw: [photo.raw, photo.full, photo.regular, photo.thumb],
+    };
+    return byQuality[quality].find(Boolean) || '';
+  };
 
   return (
     <div
@@ -203,428 +217,468 @@ export default function CategoryEditForm() {
         <div className={isLayoutMode ? 'scrollbar-hidden min-h-0 flex-1 space-y-4 overflow-y-auto pr-1' : 'space-y-4'}>
           {isLayoutMode ? (
             <>
-            <div>
-              <label className="mb-1 block text-sm font-medium text-slate-200">站点名称</label>
-              <input
-                type="text"
-                value={layoutData.name}
-                onChange={e => setLayoutData({ ...layoutData, name: e.target.value })}
-                className={fieldClassName}
-              />
-            </div>
-            <div>
-              <label className="mb-1 block text-sm font-medium text-slate-200">副标题</label>
-              <input
-                type="text"
-                value={layoutData.subtitle}
-                onChange={e => setLayoutData({ ...layoutData, subtitle: e.target.value })}
-                className={fieldClassName}
-              />
-            </div>
-            <div>
-              <label className="mb-1 block text-sm font-medium text-slate-200">站点图片 URL</label>
-              <input
-                type="text"
-                value={layoutData.siteImage}
-                onChange={e => setLayoutData({ ...layoutData, siteImage: e.target.value })}
-                placeholder="/assets/logo.png"
-                className={fieldClassName}
-              />
-            </div>
-            <div>
-              <label className="mb-1 block text-sm font-medium text-slate-200">背景图 URL</label>
-              <input
-                type="text"
-                value={layoutData.backgroundImage}
-                onChange={e => setLayoutData({ ...layoutData, backgroundImage: e.target.value })}
-                placeholder="/media/your-file.png"
-                className={fieldClassName}
-              />
-            </div>
-            <div>
-              <div className="mb-1 flex items-center justify-between gap-2">
-                <label className="text-sm font-medium text-slate-200">背景模糊度</label>
-                <div className="flex items-center gap-1 text-slate-300">
-                  <input
-                    type="number"
-                    min={0}
-                    max={40}
-                    step={1}
-                    value={layoutData.backgroundBlur}
-                    onChange={e =>
-                      setLayoutData({ ...layoutData, backgroundBlur: normalizeBlur(e.target.value, 0) })
-                    }
-                    className={compactNumberClassName}
-                  />
-                  <span className="text-xs">px</span>
-                </div>
-              </div>
-              <input
-                type="range"
-                step={1}
-                min={0}
-                max={40}
-                value={layoutData.backgroundBlur}
-                onChange={e => setLayoutData({ ...layoutData, backgroundBlur: e.target.value })}
-                className="w-full accent-cyan-400"
-              />
-            </div>
-            <div>
-              <div className="mb-1 flex items-center justify-between gap-2">
-                <label className="text-sm font-medium text-slate-200">PC 每行卡片数</label>
-                <div className="flex items-center gap-1 text-slate-300">
-                  <input
-                    type="number"
-                    min={1}
-                    max={8}
-                    step={1}
-                    value={layoutData.desktopColumns}
-                    onChange={e =>
-                      setLayoutData({ ...layoutData, desktopColumns: normalizeColumns(e.target.value, 4) })
-                    }
-                    className={compactNumberClassName}
-                  />
-                  <span className="text-xs">列</span>
-                </div>
-              </div>
-              <input
-                type="range"
-                step={1}
-                min={1}
-                max={8}
-                value={layoutData.desktopColumns}
-                onChange={e => setLayoutData({ ...layoutData, desktopColumns: e.target.value })}
-                className="w-full accent-cyan-400"
-              />
-            </div>
-            <div>
-              <div className="mb-1 flex items-center justify-between gap-2">
-                <label className="text-sm font-medium text-slate-200">导航透明度</label>
-                <div className="flex items-center gap-1 text-slate-300">
-                  <input
-                    type="number"
-                    min={0}
-                    max={100}
-                    step={1}
-                    value={layoutData.navOpacity}
-                    onChange={e => setLayoutData({ ...layoutData, navOpacity: normalizePercent(e.target.value, 62) })}
-                    className={compactNumberClassName}
-                  />
-                  <span className="text-xs">%</span>
-                </div>
-              </div>
-              <input
-                type="range"
-                step={1}
-                min={10}
-                max={100}
-                value={layoutData.navOpacity}
-                onChange={e => setLayoutData({ ...layoutData, navOpacity: e.target.value })}
-                className="w-full accent-cyan-400"
-              />
-            </div>
-            <div>
-              <div className="mb-1 flex items-center justify-between gap-2">
-                <label className="text-sm font-medium text-slate-200">页面遮罩透明度</label>
-                <div className="flex items-center gap-1 text-slate-300">
-                  <input
-                    type="number"
-                    min={0}
-                    max={100}
-                    step={1}
-                    value={layoutData.overlayOpacity}
-                    onChange={e =>
-                      setLayoutData({ ...layoutData, overlayOpacity: normalizePercent(e.target.value, 70) })
-                    }
-                    className={compactNumberClassName}
-                  />
-                  <span className="text-xs">%</span>
-                </div>
-              </div>
-              <input
-                type="range"
-                step={1}
-                min={0}
-                max={100}
-                value={layoutData.overlayOpacity}
-                onChange={e => setLayoutData({ ...layoutData, overlayOpacity: e.target.value })}
-                className="w-full accent-cyan-400"
-              />
-            </div>
-            <div>
-              <div className="mb-1 flex items-center justify-between gap-2">
-                <label className="text-sm font-medium text-slate-200">分类透明度</label>
-                <div className="flex items-center gap-1 text-slate-300">
-                  <input
-                    type="number"
-                    min={0}
-                    max={100}
-                    step={1}
-                    value={layoutData.categoryOpacity}
-                    onChange={e =>
-                      setLayoutData({ ...layoutData, categoryOpacity: normalizePercent(e.target.value, 5) })
-                    }
-                    className={compactNumberClassName}
-                  />
-                  <span className="text-xs">%</span>
-                </div>
-              </div>
-              <input
-                type="range"
-                step={1}
-                min={0}
-                max={100}
-                value={layoutData.categoryOpacity}
-                onChange={e => setLayoutData({ ...layoutData, categoryOpacity: e.target.value })}
-                className="w-full accent-cyan-400"
-              />
-            </div>
-            <div>
-              <div className="mb-1 flex items-center justify-between gap-2">
-                <label className="text-sm font-medium text-slate-200">卡片透明度</label>
-                <div className="flex items-center gap-1 text-slate-300">
-                  <input
-                    type="number"
-                    min={0}
-                    max={100}
-                    step={1}
-                    value={layoutData.cardOpacity}
-                    onChange={e => setLayoutData({ ...layoutData, cardOpacity: normalizePercent(e.target.value, 5) })}
-                    className={compactNumberClassName}
-                  />
-                  <span className="text-xs">%</span>
-                </div>
-              </div>
-              <input
-                type="range"
-                step={1}
-                min={0}
-                max={100}
-                value={layoutData.cardOpacity}
-                onChange={e => setLayoutData({ ...layoutData, cardOpacity: e.target.value })}
-                className="w-full accent-cyan-400"
-              />
-            </div>
-            <div className="space-y-2 rounded-xl border border-white/10 bg-white/5 p-3">
-              <label className="mb-1 flex items-center gap-2 text-sm font-medium text-slate-200">
-                <Image className="h-4 w-4" />
-                Unsplash 集合背景
-              </label>
-              <div className="flex gap-2">
+              <div>
+                <label className="mb-1 block text-sm font-medium text-slate-200">站点名称</label>
                 <input
                   type="text"
-                  value={layoutData.unsplashCollectionId}
-                  onChange={e => setLayoutData({ ...layoutData, unsplashCollectionId: e.target.value })}
-                  placeholder="配置收藏夹 ID，例如 317099"
+                  value={layoutData.name}
+                  onChange={e => setLayoutData({ ...layoutData, name: e.target.value })}
                   className={fieldClassName}
                 />
-                <button
-                  type="button"
-                  onClick={loadUnsplashBySavedId}
-                  className="motion-btn-hover whitespace-nowrap rounded-xl border border-white/15 bg-white/10 px-3 text-sm text-slate-200 hover:bg-white/15"
-                >
-                  加载ID
-                </button>
               </div>
-              <div className="flex gap-2">
+              <div>
+                <label className="mb-1 block text-sm font-medium text-slate-200">副标题</label>
                 <input
                   type="text"
-                  value={unsplashQuery}
-                  onChange={e => setUnsplashQuery(e.target.value)}
-                  placeholder="例如 dark abstract, cyberpunk"
+                  value={layoutData.subtitle}
+                  onChange={e => setLayoutData({ ...layoutData, subtitle: e.target.value })}
                   className={fieldClassName}
                 />
-                <button
-                  type="button"
-                  onClick={loadUnsplashCollections}
-                  className="motion-btn-hover whitespace-nowrap rounded-xl border border-white/15 bg-white/10 px-3 text-sm text-slate-200 hover:bg-white/15"
-                >
-                  搜索
-                </button>
               </div>
-              <div className="min-h-[42px]">
-                {unsplashCollections.length > 0 ? (
-                  <select
-                    value={selectedCollectionId}
-                    onChange={e => loadUnsplashPhotos(e.target.value, 1)}
-                    className={fieldClassName}
-                  >
-                    {unsplashCollections.map(item => (
-                      <option key={item.id} value={item.id} className="bg-slate-900 text-slate-100">
-                        {item.title} ({item.totalPhotos})
-                      </option>
-                    ))}
-                  </select>
-                ) : (
-                  <div className="flex h-[42px] items-center rounded-xl border border-white/10 bg-slate-900/40 px-3 text-xs text-slate-500">
-                    暂无可选集合，先搜索或输入收藏夹 ID。
+              <div>
+                <label className="mb-1 block text-sm font-medium text-slate-200">站点图片 URL</label>
+                <input
+                  type="text"
+                  value={layoutData.siteImage}
+                  onChange={e => setLayoutData({ ...layoutData, siteImage: e.target.value })}
+                  placeholder="/assets/logo.png"
+                  className={fieldClassName}
+                />
+              </div>
+              <div>
+                <label className="mb-1 block text-sm font-medium text-slate-200">背景图 URL</label>
+                <input
+                  type="text"
+                  value={layoutData.backgroundImage}
+                  onChange={e => setLayoutData({ ...layoutData, backgroundImage: e.target.value })}
+                  placeholder="/media/your-file.png"
+                  className={fieldClassName}
+                />
+              </div>
+              <div>
+                <div className="mb-1 flex items-center justify-between gap-2">
+                  <label className="text-sm font-medium text-slate-200">背景模糊度</label>
+                  <div className="flex items-center gap-1 text-slate-300">
+                    <input
+                      type="number"
+                      min={0}
+                      max={40}
+                      step={1}
+                      value={layoutData.backgroundBlur}
+                      onChange={e => setLayoutData({ ...layoutData, backgroundBlur: normalizeBlur(e.target.value, 0) })}
+                      className={compactNumberClassName}
+                    />
+                    <span className="text-xs">px</span>
                   </div>
-                )}
-              </div>
-              <div className="mb-1 flex items-center justify-between text-xs text-slate-400">
-                <span>第 {unsplashPage} 页</span>
-                <div className="flex items-center gap-2">
-                  <button
-                    type="button"
-                    disabled={!selectedCollectionId || unsplashPage <= 1 || unsplashLoading}
-                    onClick={() => loadUnsplashPhotos(selectedCollectionId, Math.max(1, unsplashPage - 1))}
-                    className="motion-btn-hover rounded-md border border-white/15 bg-white/5 px-2 py-0.5 disabled:cursor-not-allowed disabled:opacity-40"
-                  >
-                    上一页
-                  </button>
-                  <button
-                    type="button"
-                    disabled={!selectedCollectionId || !unsplashHasMore || unsplashLoading}
-                    onClick={() => loadUnsplashPhotos(selectedCollectionId, unsplashPage + 1)}
-                    className="motion-btn-hover rounded-md border border-white/15 bg-white/5 px-2 py-0.5 disabled:cursor-not-allowed disabled:opacity-40"
-                  >
-                    下一页
-                  </button>
                 </div>
+                <input
+                  type="range"
+                  step={1}
+                  min={0}
+                  max={40}
+                  value={layoutData.backgroundBlur}
+                  onChange={e => setLayoutData({ ...layoutData, backgroundBlur: e.target.value })}
+                  className="w-full accent-cyan-400"
+                />
               </div>
-              <div className="scrollbar-hidden grid max-h-44 min-h-44 grid-cols-4 gap-2 overflow-y-auto">
-                {unsplashLoading ? (
-                  <div className="col-span-4 flex items-center justify-center text-xs text-slate-500">加载中...</div>
-                ) : unsplashPhotos.length > 0 ? (
-                  unsplashPhotos.map(photo => (
-                    (() => {
-                      const selectedTarget = photo.full || photo.raw || photo.regular;
-                      const selected = isSelectedBackground(selectedTarget);
-                      return (
-                    <button
-                      type="button"
-                      key={photo.id}
-                      onClick={() =>
-                        setLayoutData({ ...layoutData, backgroundImage: photo.full || photo.raw || photo.regular })
+              <div>
+                <div className="mb-1 flex items-center justify-between gap-2">
+                  <label className="text-sm font-medium text-slate-200">PC 每行卡片数</label>
+                  <div className="flex items-center gap-1 text-slate-300">
+                    <input
+                      type="number"
+                      min={1}
+                      max={8}
+                      step={1}
+                      value={layoutData.desktopColumns}
+                      onChange={e =>
+                        setLayoutData({ ...layoutData, desktopColumns: normalizeColumns(e.target.value, 4) })
                       }
-                      className={`motion-btn-hover relative overflow-hidden rounded-lg border bg-slate-900/70 ${
-                        selected
-                          ? 'border-cyan-300/80 ring-2 ring-cyan-300/60 shadow-[0_0_0_1px_rgba(34,211,238,0.4)]'
-                          : 'border-white/15'
-                      }`}
-                      title={photo.author ? `${photo.title || 'Unsplash'} · ${photo.author}` : photo.title || 'Unsplash'}
-                    >
-                      <img src={photo.thumb} alt={photo.title || 'unsplash'} className="h-14 w-full object-contain" />
-                      {selected ? (
-                        <span className="absolute right-1.5 top-1.5 rounded-full bg-cyan-400 px-1.5 py-0.5 text-[10px] font-semibold text-slate-900">
-                          已选
-                        </span>
-                      ) : null}
-                    </button>
-                      );
-                    })()
-                  ))
-                ) : (
-                  <div className="col-span-4 flex items-center justify-center text-xs text-slate-500">
-                    暂无图片，搜索集合或加载指定 ID 后会显示在这里。
+                      className={compactNumberClassName}
+                    />
+                    <span className="text-xs">列</span>
                   </div>
-                )}
+                </div>
+                <input
+                  type="range"
+                  step={1}
+                  min={1}
+                  max={8}
+                  value={layoutData.desktopColumns}
+                  onChange={e => setLayoutData({ ...layoutData, desktopColumns: e.target.value })}
+                  className="w-full accent-cyan-400"
+                />
               </div>
-              <p className="text-[11px] text-slate-500">需要在容器环境变量中配置 `UNSPLASH_ACCESS_KEY`。</p>
-            </div>
-            <div className="space-y-2 rounded-xl border border-white/10 bg-white/5 p-3">
-              <label className="mb-1 block text-sm font-medium text-slate-200">搜索已上传图片（背景）</label>
-              <div className="flex gap-2">
-                <div className="relative flex-1">
-                  <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-500" />
+              <div>
+                <div className="mb-1 flex items-center justify-between gap-2">
+                  <label className="text-sm font-medium text-slate-200">导航透明度</label>
+                  <div className="flex items-center gap-1 text-slate-300">
+                    <input
+                      type="number"
+                      min={0}
+                      max={100}
+                      step={1}
+                      value={layoutData.navOpacity}
+                      onChange={e => setLayoutData({ ...layoutData, navOpacity: normalizePercent(e.target.value, 62) })}
+                      className={compactNumberClassName}
+                    />
+                    <span className="text-xs">%</span>
+                  </div>
+                </div>
+                <input
+                  type="range"
+                  step={1}
+                  min={10}
+                  max={100}
+                  value={layoutData.navOpacity}
+                  onChange={e => setLayoutData({ ...layoutData, navOpacity: e.target.value })}
+                  className="w-full accent-cyan-400"
+                />
+              </div>
+              <div>
+                <div className="mb-1 flex items-center justify-between gap-2">
+                  <label className="text-sm font-medium text-slate-200">页面遮罩透明度</label>
+                  <div className="flex items-center gap-1 text-slate-300">
+                    <input
+                      type="number"
+                      min={0}
+                      max={100}
+                      step={1}
+                      value={layoutData.overlayOpacity}
+                      onChange={e =>
+                        setLayoutData({ ...layoutData, overlayOpacity: normalizePercent(e.target.value, 70) })
+                      }
+                      className={compactNumberClassName}
+                    />
+                    <span className="text-xs">%</span>
+                  </div>
+                </div>
+                <input
+                  type="range"
+                  step={1}
+                  min={0}
+                  max={100}
+                  value={layoutData.overlayOpacity}
+                  onChange={e => setLayoutData({ ...layoutData, overlayOpacity: e.target.value })}
+                  className="w-full accent-cyan-400"
+                />
+              </div>
+              <div>
+                <div className="mb-1 flex items-center justify-between gap-2">
+                  <label className="text-sm font-medium text-slate-200">分类透明度</label>
+                  <div className="flex items-center gap-1 text-slate-300">
+                    <input
+                      type="number"
+                      min={0}
+                      max={100}
+                      step={1}
+                      value={layoutData.categoryOpacity}
+                      onChange={e =>
+                        setLayoutData({ ...layoutData, categoryOpacity: normalizePercent(e.target.value, 5) })
+                      }
+                      className={compactNumberClassName}
+                    />
+                    <span className="text-xs">%</span>
+                  </div>
+                </div>
+                <input
+                  type="range"
+                  step={1}
+                  min={0}
+                  max={100}
+                  value={layoutData.categoryOpacity}
+                  onChange={e => setLayoutData({ ...layoutData, categoryOpacity: e.target.value })}
+                  className="w-full accent-cyan-400"
+                />
+              </div>
+              <div>
+                <div className="mb-1 flex items-center justify-between gap-2">
+                  <label className="text-sm font-medium text-slate-200">卡片透明度</label>
+                  <div className="flex items-center gap-1 text-slate-300">
+                    <input
+                      type="number"
+                      min={0}
+                      max={100}
+                      step={1}
+                      value={layoutData.cardOpacity}
+                      onChange={e => setLayoutData({ ...layoutData, cardOpacity: normalizePercent(e.target.value, 5) })}
+                      className={compactNumberClassName}
+                    />
+                    <span className="text-xs">%</span>
+                  </div>
+                </div>
+                <input
+                  type="range"
+                  step={1}
+                  min={0}
+                  max={100}
+                  value={layoutData.cardOpacity}
+                  onChange={e => setLayoutData({ ...layoutData, cardOpacity: e.target.value })}
+                  className="w-full accent-cyan-400"
+                />
+              </div>
+              <div className="space-y-2 rounded-xl border border-white/10 bg-white/5 p-3">
+                <label className="mb-1 flex items-center gap-2 text-sm font-medium text-slate-200">
+                  <Image className="h-4 w-4" />
+                  Unsplash 集合背景
+                </label>
+                <div className="flex gap-2">
                   <input
                     type="text"
-                    value={mediaQuery}
-                    onChange={e => setMediaQuery(e.target.value)}
-                    placeholder="输入文件名关键词，例如 png / wallpaper"
-                    className={`${fieldClassName} pl-9`}
+                    value={layoutData.unsplashCollectionId}
+                    onChange={e => setLayoutData({ ...layoutData, unsplashCollectionId: e.target.value })}
+                    placeholder="配置收藏夹 ID，例如 317099"
+                    className={fieldClassName}
                   />
+                  <button
+                    type="button"
+                    onClick={loadUnsplashBySavedId}
+                    className="motion-btn-hover whitespace-nowrap rounded-xl border border-white/15 bg-white/10 px-3 text-sm text-slate-200 hover:bg-white/15"
+                  >
+                    加载ID
+                  </button>
                 </div>
-              </div>
-              <div className="scrollbar-hidden grid max-h-40 min-h-40 grid-cols-4 gap-2 overflow-y-auto">
-                {mediaLoading ? (
-                  <p className="col-span-4 flex items-center justify-center text-xs text-slate-400">搜索中...</p>
-                ) : mediaResults.length === 0 ? (
-                  <p className="col-span-4 flex items-center justify-center text-xs text-slate-400">暂无匹配图片</p>
-                ) : (
-                  mediaResults.map(item => (
-                    (() => {
-                      const selected = isSelectedBackground(item.url);
-                      return (
+                <div className="flex gap-2">
+                  <input
+                    type="text"
+                    value={unsplashQuery}
+                    onChange={e => setUnsplashQuery(e.target.value)}
+                    placeholder="例如 dark abstract, cyberpunk"
+                    className={fieldClassName}
+                  />
+                  <button
+                    type="button"
+                    onClick={loadUnsplashCollections}
+                    className="motion-btn-hover whitespace-nowrap rounded-xl border border-white/15 bg-white/10 px-3 text-sm text-slate-200 hover:bg-white/15"
+                  >
+                    搜索
+                  </button>
+                </div>
+                <div className="min-h-[42px]">
+                  {unsplashCollections.length > 0 ? (
+                    <select
+                      value={selectedCollectionId}
+                      onChange={e => loadUnsplashPhotos(e.target.value, 1)}
+                      className={fieldClassName}
+                    >
+                      {unsplashCollections.map(item => (
+                        <option
+                          key={item.id}
+                          value={item.id}
+                          className="bg-slate-900 text-slate-100"
+                        >
+                          {item.title} ({item.totalPhotos})
+                        </option>
+                      ))}
+                    </select>
+                  ) : (
+                    <div className="flex h-[42px] items-center rounded-xl border border-white/10 bg-slate-900/40 px-3 text-xs text-slate-500">
+                      暂无可选集合，先搜索或输入收藏夹 ID。
+                    </div>
+                  )}
+                </div>
+                <div className="mb-1 flex items-center justify-between text-xs text-slate-400">
+                  <span>第 {unsplashPage} 页</span>
+                  <div className="flex items-center gap-2">
                     <button
                       type="button"
-                      key={item.url}
-                      onClick={() => setLayoutData({ ...layoutData, backgroundImage: item.url })}
-                      className={`motion-btn-hover group relative flex flex-col items-center gap-2 rounded-xl border bg-slate-900/70 p-2 text-left ${
-                        selected
-                          ? 'border-cyan-300/80 ring-2 ring-cyan-300/60 shadow-[0_0_0_1px_rgba(34,211,238,0.4)]'
-                          : 'border-white/15'
-                      }`}
-                      title={item.name}
+                      disabled={!selectedCollectionId || unsplashPage <= 1 || unsplashLoading}
+                      onClick={() => loadUnsplashPhotos(selectedCollectionId, Math.max(1, unsplashPage - 1))}
+                      className="motion-btn-hover rounded-md border border-white/15 bg-white/5 px-2 py-0.5 disabled:cursor-not-allowed disabled:opacity-40"
                     >
-                      <div className="flex h-11 w-11 items-center justify-center rounded-xl bg-slate-800/80 ring-1 ring-white/10">
-                        <img src={item.url} alt={item.name} className="h-7 w-7 rounded object-contain" />
-                      </div>
-                      <div className="w-full truncate text-center text-[10px] text-slate-300">{item.name}</div>
-                      {selected ? (
-                        <span className="absolute right-1.5 top-1.5 rounded-full bg-cyan-400 px-1.5 py-0.5 text-[10px] font-semibold text-slate-900">
-                          已选
-                        </span>
-                      ) : null}
+                      上一页
                     </button>
-                      );
-                    })()
-                  ))
-                )}
+                    <button
+                      type="button"
+                      disabled={!selectedCollectionId || !unsplashHasMore || unsplashLoading}
+                      onClick={() => loadUnsplashPhotos(selectedCollectionId, unsplashPage + 1)}
+                      className="motion-btn-hover rounded-md border border-white/15 bg-white/5 px-2 py-0.5 disabled:cursor-not-allowed disabled:opacity-40"
+                    >
+                      下一页
+                    </button>
+                  </div>
+                </div>
+                <div className="mb-2 flex items-center justify-end gap-2">
+                  <label className="text-xs text-slate-400">背景图清晰度</label>
+                  <select
+                    value={unsplashQuality}
+                    onChange={e => setUnsplashQuality(e.target.value as UnsplashQuality)}
+                    className="motion-input-focus h-8 rounded-lg border border-white/15 bg-slate-900/70 px-2 text-xs text-slate-100 outline-none"
+                  >
+                    <option value="thumb" className="bg-slate-900 text-slate-100">
+                      thumb（低）
+                    </option>
+                    <option value="regular" className="bg-slate-900 text-slate-100">
+                      regular（中）
+                    </option>
+                    <option value="full" className="bg-slate-900 text-slate-100">
+                      full（高，默认）
+                    </option>
+                    <option value="raw" className="bg-slate-900 text-slate-100">
+                      raw（最高）
+                    </option>
+                  </select>
+                </div>
+                <div className="scrollbar-hidden grid max-h-44 min-h-44 grid-cols-4 gap-2 overflow-y-auto">
+                  {unsplashLoading ? (
+                    <div className="col-span-4 flex items-center justify-center text-xs text-slate-500">加载中...</div>
+                  ) : unsplashPhotos.length > 0 ? (
+                    unsplashPhotos.map(photo =>
+                      (() => {
+                        const selectedTarget = resolveUnsplashUrl(photo, unsplashQuality);
+                        const selected = isSelectedBackground(selectedTarget);
+                        return (
+                          <button
+                            type="button"
+                            key={photo.id}
+                            onClick={() =>
+                              setLayoutData({
+                                ...layoutData,
+                                backgroundImage: resolveUnsplashUrl(photo, unsplashQuality),
+                              })
+                            }
+                            className={`motion-btn-hover relative overflow-hidden rounded-lg border bg-slate-900/70 ${
+                              selected
+                                ? 'border-cyan-300/80 ring-2 ring-cyan-300/60 shadow-[0_0_0_1px_rgba(34,211,238,0.4)]'
+                                : 'border-white/15'
+                            }`}
+                            title={
+                              photo.author
+                                ? `${photo.title || 'Unsplash'} · ${photo.author}`
+                                : photo.title || 'Unsplash'
+                            }
+                          >
+                            <img
+                              src={photo.thumb}
+                              alt={photo.title || 'unsplash'}
+                              className="h-14 w-full object-contain"
+                            />
+                            {selected ? (
+                              <span className="absolute right-1.5 top-1.5 rounded-full bg-cyan-400 px-1.5 py-0.5 text-[10px] font-semibold text-slate-900">
+                                已选
+                              </span>
+                            ) : null}
+                          </button>
+                        );
+                      })(),
+                    )
+                  ) : (
+                    <div className="col-span-4 flex items-center justify-center text-xs text-slate-500">
+                      暂无图片，搜索集合或加载指定 ID 后会显示在这里。
+                    </div>
+                  )}
+                </div>
+                <p className="text-[11px] text-slate-500">需要在容器环境变量中配置 `UNSPLASH_ACCESS_KEY`。</p>
               </div>
-            </div>
+              <div className="space-y-2 rounded-xl border border-white/10 bg-white/5 p-3">
+                <label className="mb-1 block text-sm font-medium text-slate-200">搜索已上传图片（背景）</label>
+                <div className="flex gap-2">
+                  <div className="relative flex-1">
+                    <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-500" />
+                    <input
+                      type="text"
+                      value={mediaQuery}
+                      onChange={e => setMediaQuery(e.target.value)}
+                      placeholder="输入文件名关键词，例如 png / wallpaper"
+                      className={`${fieldClassName} pl-9`}
+                    />
+                  </div>
+                </div>
+                <div className="scrollbar-hidden grid max-h-40 min-h-40 grid-cols-4 gap-2 overflow-y-auto">
+                  {mediaLoading ? (
+                    <p className="col-span-4 flex items-center justify-center text-xs text-slate-400">搜索中...</p>
+                  ) : mediaResults.length === 0 ? (
+                    <p className="col-span-4 flex items-center justify-center text-xs text-slate-400">暂无匹配图片</p>
+                  ) : (
+                    mediaResults.map(item =>
+                      (() => {
+                        const selected = isSelectedBackground(item.url);
+                        return (
+                          <button
+                            type="button"
+                            key={item.url}
+                            onClick={() => setLayoutData({ ...layoutData, backgroundImage: item.url })}
+                            className={`motion-btn-hover group relative flex flex-col items-center gap-2 rounded-xl border bg-slate-900/70 p-2 text-left ${
+                              selected
+                                ? 'border-cyan-300/80 ring-2 ring-cyan-300/60 shadow-[0_0_0_1px_rgba(34,211,238,0.4)]'
+                                : 'border-white/15'
+                            }`}
+                            title={item.name}
+                          >
+                            <div className="flex h-11 w-11 items-center justify-center rounded-xl bg-slate-800/80 ring-1 ring-white/10">
+                              <img
+                                src={item.url}
+                                alt={item.name}
+                                className="h-7 w-7 rounded object-contain"
+                              />
+                            </div>
+                            <div className="w-full truncate text-center text-[10px] text-slate-300">{item.name}</div>
+                            {selected ? (
+                              <span className="absolute right-1.5 top-1.5 rounded-full bg-cyan-400 px-1.5 py-0.5 text-[10px] font-semibold text-slate-900">
+                                已选
+                              </span>
+                            ) : null}
+                          </button>
+                        );
+                      })(),
+                    )
+                  )}
+                </div>
+              </div>
             </>
           ) : (
             <>
-            <div>
-              <label className="mb-1 block text-sm font-medium text-slate-200">分类名称</label>
-              <input
-                type="text"
-                value={formData.title}
-                onChange={e => setFormData({ ...formData, title: e.target.value })}
-                placeholder="例如：工作、娱乐、工具"
-                className={fieldClassName}
-                autoFocus
-              />
-            </div>
-
-            <div>
-              <label className="mb-2 flex items-center gap-1 text-sm font-medium text-slate-200">
-                <Palette className="h-4 w-4" />
-                颜色
-              </label>
-              <button
-                type="button"
-                onClick={() => setFormData({ ...formData, color: '' })}
-                className={`motion-btn-hover mb-2 inline-flex h-9 items-center justify-center rounded-xl border px-3 text-xs ${
-                  formData.color === ''
-                    ? 'border-cyan-300/60 bg-cyan-500/15 text-cyan-100'
-                    : 'border-white/15 bg-white/5 text-slate-300 hover:bg-white/10'
-                }`}
-              >
-                使用毛玻璃（无底色）
-              </button>
-              <div className="grid grid-cols-5 gap-2">
-                {COLORS.map(color => (
-                  <button
-                    key={color}
-                    type="button"
-                    onClick={() => setFormData({ ...formData, color })}
-                    className={`h-10 w-10 rounded-xl border border-white/20 transition-all duration-200 ${
-                      formData.color === color
-                        ? 'scale-110 ring-2 ring-cyan-300 ring-offset-2 ring-offset-slate-900'
-                        : 'hover:scale-105'
-                    }`}
-                    style={{ backgroundColor: color }}
-                  />
-                ))}
+              <div>
+                <label className="mb-1 block text-sm font-medium text-slate-200">分类名称</label>
+                <input
+                  type="text"
+                  value={formData.title}
+                  onChange={e => setFormData({ ...formData, title: e.target.value })}
+                  placeholder="例如：工作、娱乐、工具"
+                  className={fieldClassName}
+                  autoFocus
+                />
               </div>
-            </div>
+
+              <div>
+                <label className="mb-2 flex items-center gap-1 text-sm font-medium text-slate-200">
+                  <Palette className="h-4 w-4" />
+                  颜色
+                </label>
+                <button
+                  type="button"
+                  onClick={() => setFormData({ ...formData, color: '' })}
+                  className={`motion-btn-hover mb-2 inline-flex h-9 items-center justify-center rounded-xl border px-3 text-xs ${
+                    formData.color === ''
+                      ? 'border-cyan-300/60 bg-cyan-500/15 text-cyan-100'
+                      : 'border-white/15 bg-white/5 text-slate-300 hover:bg-white/10'
+                  }`}
+                >
+                  使用毛玻璃（无底色）
+                </button>
+                <div className="grid grid-cols-5 gap-2">
+                  {COLORS.map(color => (
+                    <button
+                      key={color}
+                      type="button"
+                      onClick={() => setFormData({ ...formData, color })}
+                      className={`h-10 w-10 rounded-xl border border-white/20 transition-all duration-200 ${
+                        formData.color === color
+                          ? 'scale-110 ring-2 ring-cyan-300 ring-offset-2 ring-offset-slate-900'
+                          : 'hover:scale-105'
+                      }`}
+                      style={{ backgroundColor: color }}
+                    />
+                  ))}
+                </div>
+              </div>
             </>
           )}
         </div>
 
-        <div className={`flex gap-3 pt-4 ${isLayoutMode ? 'mt-4 shrink-0 border-t border-white/10 bg-slate-900/80' : ''}`}>
+        <div
+          className={`flex gap-3 pt-4 ${isLayoutMode ? 'mt-4 shrink-0 border-t border-white/10 bg-slate-900/80' : ''}`}
+        >
           {isEditing && !isLayoutMode && (
             <button
               type="button"

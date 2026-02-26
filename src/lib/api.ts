@@ -28,9 +28,7 @@ export const apiCheckSession = async () => {
   return Boolean(json.authenticated);
 };
 
-export const apiLoadData = async (
-  key?: string
-): Promise<{ data: AppData; key: string; keys: string[] } | null> => {
+export const apiLoadData = async (key?: string): Promise<{ data: AppData; key: string; keys: string[] } | null> => {
   const search = key ? `?key=${encodeURIComponent(key)}` : '';
   const res = await fetch(`/api/home${search}`, { cache: 'no-store' });
   if (!res.ok) return null;
@@ -105,7 +103,15 @@ export const apiListUnsplashPhotos = async (collectionId: string, page = 1, perP
   });
   if (!res.ok) return [];
   const json = (await res.json()) as {
-    photos?: Array<{ id: string; title: string; thumb: string; regular: string; full: string; raw: string; author: string }>;
+    photos?: Array<{
+      id: string;
+      title: string;
+      thumb: string;
+      regular: string;
+      full: string;
+      raw: string;
+      author: string;
+    }>;
   };
   return json.photos || [];
 };

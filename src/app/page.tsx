@@ -9,6 +9,7 @@ import Header from '@/components/Header';
 import CategoryList from '@/components/CategoryList';
 import AddButton from '@/components/AddButton';
 import EditModal from '@/components/EditModal';
+import GlobalSearch from '@/components/GlobalSearch';
 
 export default function Home() {
   const { isAuthenticated, isChecking, checkAuth } = useAuthStore();
@@ -52,7 +53,7 @@ export default function Home() {
     ['--card-opacity' as string]: `${(Math.min(Math.max(layout.head?.cardOpacity ?? 5, 0), 100) / 100).toFixed(2)}`,
     ['--card-hover-opacity' as string]: `${Math.min(
       Math.max((layout.head?.cardOpacity ?? 5) / 100 + 0.05, 0.06),
-      0.35
+      0.35,
     ).toFixed(2)}`,
   };
 
@@ -79,28 +80,29 @@ export default function Home() {
         }}
       />
       <div className="relative z-10">
-      <Header />
-      <main className="mx-auto w-full max-w-[1720px] px-4 pb-24 pt-32 sm:px-6 sm:pt-24 lg:px-8">
-        {error ? (
-          <div className="mb-4 rounded-xl border border-amber-400/30 bg-amber-500/20 px-4 py-3 text-sm text-amber-100">
-            {error}
+        <Header />
+        <main className="mx-auto w-full max-w-[1720px] px-4 pb-24 pt-32 sm:px-6 sm:pt-24 lg:px-8">
+          {error ? (
+            <div className="mb-4 rounded-xl border border-amber-400/30 bg-amber-500/20 px-4 py-3 text-sm text-amber-100">
+              {error}
+            </div>
+          ) : null}
+          {isLoading ? (
+            <div className="flex h-64 items-center justify-center">
+              <div className="h-12 w-12 animate-spin rounded-full border-2 border-slate-700 border-t-cyan-400" />
+            </div>
+          ) : (
+            <CategoryList />
+          )}
+        </main>
+        {isSaving ? (
+          <div className="fixed bottom-5 left-1/2 z-40 -translate-x-1/2 rounded-full border border-white/20 bg-white/10 px-4 py-1.5 text-xs text-slate-100 backdrop-blur-md">
+            正在保存...
           </div>
         ) : null}
-        {isLoading ? (
-          <div className="flex h-64 items-center justify-center">
-            <div className="h-12 w-12 animate-spin rounded-full border-2 border-slate-700 border-t-cyan-400" />
-          </div>
-        ) : (
-          <CategoryList />
-        )}
-      </main>
-      {isSaving ? (
-        <div className="fixed bottom-5 left-1/2 z-40 -translate-x-1/2 rounded-full border border-white/20 bg-white/10 px-4 py-1.5 text-xs text-slate-100 backdrop-blur-md">
-          正在保存...
-        </div>
-      ) : null}
-      <AddButton />
-      <EditModal />
+        <AddButton />
+        <EditModal />
+        <GlobalSearch />
       </div>
     </div>
   );
