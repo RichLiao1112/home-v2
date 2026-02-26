@@ -496,6 +496,7 @@ export default function GlobalSearch() {
 
   const handleDeleteCard = (item: SearchItem) => {
     if (!window.confirm(`确认删除卡片「${item.card.title}」吗？`)) return;
+    if (!window.confirm('请再次确认：删除后卡片会进入回收站。是否继续？')) return;
     deleteCard(item.card.id, item.categoryId);
     recordAction({
       type: 'card-delete',
@@ -539,6 +540,7 @@ export default function GlobalSearch() {
       await createConfigKey(key);
     } else if (command.id === 'delete-current-key') {
       if (!window.confirm(`确认删除当前配置 "${currentKey}" 吗？`)) return;
+      if (!window.confirm('请再次确认：该配置会被删除且不可直接恢复。是否继续？')) return;
       await deleteConfigKey(currentKey);
     } else if (command.id === 'switch-next-key') {
       if (configKeys.length <= 1) return;

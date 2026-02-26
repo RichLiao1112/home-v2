@@ -606,7 +606,7 @@ export default function Header() {
               <p className="hidden truncate text-xs text-slate-400 sm:block">{layout.head?.subtitle || ''}</p>
             </div>
           </div>
-
+          
           <div className="flex items-center gap-2 sm:hidden">
             <button
               onClick={openGlobalSearch}
@@ -630,18 +630,18 @@ export default function Header() {
               <LayoutPanelTop className="h-4 w-4" />
             </button>
             <button
-              onClick={() => logout()}
-              className="motion-btn-hover inline-flex h-9 w-9 items-center justify-center rounded-xl border border-white/15 bg-white/5 text-slate-200"
-              aria-label="退出"
-            >
-              <LogOut className="h-4 w-4" />
-            </button>
-            <button
               onClick={openRecycleDialog}
               className="motion-btn-hover inline-flex h-9 w-9 items-center justify-center rounded-xl border border-white/15 bg-white/5 text-slate-200"
               aria-label="打开回收站"
             >
               <ArchiveRestore className="h-4 w-4" />
+            </button>
+            <button
+              onClick={() => logout()}
+              className="motion-btn-hover inline-flex h-9 w-9 items-center justify-center rounded-xl border border-white/15 bg-white/5 text-slate-200"
+              aria-label="退出"
+            >
+              <LogOut className="h-4 w-4" />
             </button>
           </div>
 
@@ -705,13 +705,6 @@ export default function Header() {
               <LayoutPanelTop className="h-4 w-4" />
             </button>
             <button
-              onClick={() => logout()}
-              className="motion-btn-hover inline-flex h-10 cursor-pointer items-center gap-2 whitespace-nowrap rounded-xl border border-white/15 bg-white/5 px-3 text-sm text-slate-200 transition hover:border-rose-300/30 hover:bg-rose-500/15 hover:text-rose-100 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-rose-300"
-            >
-              <LogOut className="h-4 w-4" />
-              <span>退出</span>
-            </button>
-            <button
               onClick={openSnapshotDialog}
               className="motion-btn-hover inline-flex h-10 cursor-pointer items-center gap-2 whitespace-nowrap rounded-xl border border-white/15 bg-white/5 px-3 text-sm text-slate-200 transition hover:bg-white/10"
             >
@@ -724,6 +717,13 @@ export default function Header() {
             >
               <RotateCcw className="h-4 w-4" />
               <span>回收站</span>
+            </button>
+            <button
+              onClick={() => logout()}
+              className="motion-btn-hover inline-flex h-10 cursor-pointer items-center gap-2 whitespace-nowrap rounded-xl border border-white/15 bg-white/5 px-3 text-sm text-slate-200 transition hover:border-rose-300/30 hover:bg-rose-500/15 hover:text-rose-100 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-rose-300"
+            >
+              <LogOut className="h-4 w-4" />
+              <span>退出</span>
             </button>
           </div>
         </div>
