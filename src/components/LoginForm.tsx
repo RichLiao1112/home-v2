@@ -98,7 +98,7 @@ export default function LoginForm() {
             <div
               className={`mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-2xl ${
                 site.siteImage
-                  ? 'border border-white/20 bg-transparent'
+                  ? 'bg-transparent'
                   : 'bg-gradient-to-br from-indigo-500 to-cyan-500 shadow-lg shadow-indigo-900/30'
               }`}
             >

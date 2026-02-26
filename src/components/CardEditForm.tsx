@@ -217,7 +217,7 @@ export default function CardEditForm() {
             type="color"
             value={formData.coverColor}
             onChange={e => setFormData({ ...formData, coverColor: e.target.value })}
-            className="h-10 w-24 cursor-pointer rounded-xl border border-white/15 bg-slate-900/70"
+            className="h-10 w-24 cursor-pointer rounded-xl bg-slate-900/70"
           />
         </div>
 

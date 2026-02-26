@@ -147,7 +147,7 @@ export default function Header() {
             <div
               className={`flex h-10 w-10 shrink-0 items-center justify-center rounded-xl ${
                 layout.head?.siteImage
-                  ? 'border border-white/15 bg-transparent'
+                  ? 'bg-transparent'
                   : 'bg-gradient-to-br from-indigo-500 to-cyan-500 shadow-lg shadow-indigo-900/30'
               }`}
             >
