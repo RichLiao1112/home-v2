@@ -21,6 +21,8 @@ data/*.json
 media/*
 !data/.gitkeep
 !media/.gitkeep
+!media/imgs/
+!media/imgs/**
 
 # misc
 .DS_Store
