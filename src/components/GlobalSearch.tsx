@@ -32,6 +32,7 @@ type SearchResultItem =
   | { kind: 'card'; item: SearchItem; score: number };
 
 const normalize = (value: string) => value.toLowerCase().replace(/\s+/g, '').trim();
+const KEY_PREFIX_PATTERN = /^(key|k)\s*:/i;
 
 const isEditableTarget = (target: EventTarget | null) => {
   if (!(target instanceof HTMLElement)) return false;
@@ -174,13 +175,22 @@ export default function GlobalSearch() {
     recentRecords.forEach(record => map.set(record.id, record));
     return map;
   }, [recentRecords]);
-  const normalizedQuery = normalize(query);
   const rawQuery = query.trim();
+  const isKeyOnlyMode = KEY_PREFIX_PATTERN.test(rawQuery);
+  const effectiveRawQuery = isKeyOnlyMode ? rawQuery.replace(KEY_PREFIX_PATTERN, '').trim() : rawQuery;
+  const normalizedQuery = normalize(effectiveRawQuery);
   const results = useMemo<SearchResultItem[]>(() => {
     const keyEntries = configKeys
       .map(key => ({ key, score: getKeyMatchScore(normalizedQuery, key) }))
       .filter(entry => entry.score >= 0)
       .sort((a, b) => b.score - a.score);
+    const keyResults = keyEntries
+      .slice(0, MAX_RESULTS)
+      .map(entry => ({ kind: 'key' as const, key: entry.key, score: entry.score }));
+
+    if (isKeyOnlyMode) {
+      return keyResults;
+    }
 
     if (!normalizedQuery) {
       const sortedRecent = recentRecords
@@ -194,7 +204,6 @@ export default function GlobalSearch() {
       const cardResults = [...recentItems, ...remainingItems]
         .slice(0, cardLimit)
         .map(item => ({ kind: 'card' as const, item, score: 1 }));
-      const keyResults = keyEntries.map(entry => ({ kind: 'key' as const, key: entry.key, score: entry.score }));
       return [...keyResults, ...cardResults];
     }
     const cardLimit = Math.max(0, MAX_RESULTS - keyEntries.length);
@@ -204,9 +213,8 @@ export default function GlobalSearch() {
       .sort((a, b) => b.score - a.score)
       .slice(0, cardLimit)
       .map(entry => ({ kind: 'card' as const, item: entry.item, score: entry.score }));
-    const keyResults = keyEntries.map(entry => ({ kind: 'key' as const, key: entry.key, score: entry.score }));
     return [...keyResults, ...cardResults];
-  }, [configKeys, itemMap, normalizedQuery, recentRecords, searchItems]);
+  }, [configKeys, isKeyOnlyMode, itemMap, normalizedQuery, recentRecords, searchItems]);
 
   const closeDialog = () => {
     setOpen(false);
@@ -332,7 +340,7 @@ export default function GlobalSearch() {
           </button>
         </div>
         <div className="mt-2 text-[11px] text-slate-500">
-          快捷键：`/` 或 `Ctrl+K`，回车执行，方向键切换。可直接搜索配置 key 并回车切换。
+          快捷键：`/` 或 `Ctrl+K`，回车执行，方向键切换。输入 `key:` 或 `k:` 可只搜索配置并回车切换。
         </div>
 
         <div className="scrollbar-hidden mt-3 max-h-[min(58vh,560px)] overflow-y-auto rounded-xl border border-white/10 bg-white/5">
@@ -356,7 +364,7 @@ export default function GlobalSearch() {
                       onClick={() => void switchConfigKey(result.key)}
                       className="min-w-0 flex-1 text-left"
                     >
-                      <div className="truncate text-sm text-slate-100">{highlightText(result.key, rawQuery)}</div>
+                    <div className="truncate text-sm text-slate-100">{highlightText(result.key, effectiveRawQuery)}</div>
                       <div className="truncate text-xs text-slate-400">配置切换</div>
                     </button>
                     <div className="flex shrink-0 items-center gap-1">
@@ -385,13 +393,13 @@ export default function GlobalSearch() {
                   }`}
                 >
                   <button type="button" onClick={() => openCardLink(item, 'best')} className="min-w-0 flex-1 text-left">
-                    <div className="truncate text-sm text-slate-100">{highlightText(item.card.title, rawQuery)}</div>
+                    <div className="truncate text-sm text-slate-100">{highlightText(item.card.title, effectiveRawQuery)}</div>
                     <div className="truncate text-xs text-slate-400">
-                      {highlightText(item.categoryTitle, rawQuery)}
+                      {highlightText(item.categoryTitle, effectiveRawQuery)}
                       {item.card.description ? (
                         <>
                           {' · '}
-                          {highlightText(item.card.description, rawQuery)}
+                          {highlightText(item.card.description, effectiveRawQuery)}
                         </>
                       ) : null}
                     </div>
