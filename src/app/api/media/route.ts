@@ -2,10 +2,10 @@ import { readdir } from 'fs/promises';
 import path from 'path';
 import { NextRequest, NextResponse } from 'next/server';
 import { isAuthorizedRequest } from '@/server/auth';
-import { getMediaDir } from '@/server/data-store';
 
 const IMAGE_EXTENSIONS = new Set(['.png', '.jpg', '.jpeg', '.webp', '.gif', '.svg']);
 const ASSETS_DIR = process.env.ASSETS_DIR || path.join(process.cwd(), 'assets');
+const BUILTIN_MEDIA_DIR = process.env.BUILTIN_MEDIA_DIR || path.join(process.cwd(), 'media-builtin');
 const MAX_DEPTH = 3;
 
 const walkImageFiles = async (rootDir: string, depth = 0, base = ''): Promise<string[]> => {
@@ -34,7 +34,7 @@ export async function GET(req: NextRequest) {
   }
 
   const query = (req.nextUrl.searchParams.get('q') || '').trim().toLowerCase();
-  const mediaFiles = await walkImageFiles(getMediaDir());
+  const mediaFiles = await walkImageFiles(BUILTIN_MEDIA_DIR);
   const assetFiles = await walkImageFiles(ASSETS_DIR);
 
   const files = [
