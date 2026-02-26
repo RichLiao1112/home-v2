@@ -43,7 +43,7 @@ COPY --from=builder --chown=nextjs:nodejs /app/.next/standalone ./
 COPY --from=builder --chown=nextjs:nodejs /app/.next/static ./.next/static
 
 # Runtime writable dirs for mounted data/media
-RUN mkdir -p /app/data /app/media && chown -R nextjs:nodejs /app/data /app/media
+RUN mkdir -p /app/data /app/media /app/assets && chown -R nextjs:nodejs /app/data /app/media /app/assets
 # Bundle default static media assets into image
 COPY --from=builder --chown=nextjs:nodejs /app/media/imgs /app/media/imgs
 
@@ -57,5 +57,6 @@ ENV PORT=3000
 ENV HOSTNAME="0.0.0.0"
 ENV DATA_DIR="/app/data"
 ENV MEDIA_DIR="/app/media"
+ENV ASSETS_DIR="/app/assets"
 
 CMD ["/entrypoint.sh"]
