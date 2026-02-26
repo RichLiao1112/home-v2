@@ -56,6 +56,8 @@ type CommandItem = {
   id: string;
   title: string;
   description: string;
+  trigger: string;
+  aliases?: string[];
   keywords: string[];
   shortcut?: string;
 };
@@ -71,6 +73,8 @@ const COMMANDS: CommandItem[] = [
     id: 'open-settings',
     title: '打开页面设置',
     description: '进入页面设置弹窗',
+    trigger: 'settings',
+    aliases: ['layout', 'page-settings'],
     keywords: ['settings', '页面设置', 'layout'],
     shortcut: '回车',
   },
@@ -78,6 +82,8 @@ const COMMANDS: CommandItem[] = [
     id: 'open-snapshot',
     title: '打开快照管理',
     description: '查看、创建、恢复快照',
+    trigger: 'snapshot',
+    aliases: ['snapshots', 'rollback'],
     keywords: ['snapshot', '快照', '回滚'],
     shortcut: '回车',
   },
@@ -85,6 +91,8 @@ const COMMANDS: CommandItem[] = [
     id: 'open-recycle',
     title: '打开回收站',
     description: '恢复或永久删除已移除项',
+    trigger: 'recycle',
+    aliases: ['trash', 'bin'],
     keywords: ['recycle', '回收站', '恢复'],
     shortcut: '回车',
   },
@@ -92,6 +100,8 @@ const COMMANDS: CommandItem[] = [
     id: 'focus-key-mode',
     title: '进入 key 搜索模式',
     description: '自动填入 key:，仅搜索配置 key',
+    trigger: 'key',
+    aliases: ['keys', 'switch-key'],
     keywords: ['key', 'k:', '配置切换'],
     shortcut: '回车',
   },
@@ -99,6 +109,8 @@ const COMMANDS: CommandItem[] = [
     id: 'create-key',
     title: '新建配置 key',
     description: '输入 key 名称并创建新配置',
+    trigger: 'create-key',
+    aliases: ['new-key', 'add-key'],
     keywords: ['新增 key', 'create key', '配置管理'],
     shortcut: '回车',
   },
@@ -106,6 +118,8 @@ const COMMANDS: CommandItem[] = [
     id: 'delete-current-key',
     title: '删除当前配置 key',
     description: '删除当前配置（至少保留一个）',
+    trigger: 'delete-key',
+    aliases: ['remove-key'],
     keywords: ['删除 key', 'remove key', '配置管理'],
     shortcut: '回车',
   },
@@ -113,6 +127,8 @@ const COMMANDS: CommandItem[] = [
     id: 'switch-next-key',
     title: '切换到下一个 key',
     description: '按配置列表顺序切换到下一个',
+    trigger: 'next-key',
+    aliases: ['key-next'],
     keywords: ['next key', '下一个配置', '配置管理'],
     shortcut: '回车',
   },
@@ -120,6 +136,8 @@ const COMMANDS: CommandItem[] = [
     id: 'switch-prev-key',
     title: '切换到上一个 key',
     description: '按配置列表顺序切换到上一个',
+    trigger: 'prev-key',
+    aliases: ['previous-key', 'key-prev'],
     keywords: ['prev key', '上一个配置', '配置管理'],
     shortcut: '回车',
   },
@@ -127,6 +145,8 @@ const COMMANDS: CommandItem[] = [
     id: 'create-snapshot-now',
     title: '立即创建快照',
     description: '为当前配置创建手动快照',
+    trigger: 'snapshot-now',
+    aliases: ['create-snapshot'],
     keywords: ['snapshot', '创建快照', '配置管理'],
     shortcut: '回车',
   },
@@ -235,8 +255,20 @@ const getCommandMatchScore = (query: string, command: CommandItem) => {
   if (!query) return 110;
   const label = normalize(command.title);
   const desc = normalize(command.description);
+  const commandText = normalize(command.trigger);
+  const aliasText = normalize((command.aliases || []).join(' '));
   const keywordText = normalize(command.keywords.join(' '));
-  return Math.max(getFieldScore(query, label), getFieldScore(query, desc) - 8, getFieldScore(query, keywordText) - 4);
+
+  if (query === commandText) return 999;
+  if ((command.aliases || []).some(alias => normalize(alias) === query)) return 980;
+
+  return Math.max(
+    getFieldScore(query, commandText) + 35,
+    getFieldScore(query, aliasText) + 22,
+    getFieldScore(query, label),
+    getFieldScore(query, desc) - 8,
+    getFieldScore(query, keywordText) - 4,
+  );
 };
 
 const readRecentOpen = (): RecentOpenRecord[] => {
@@ -741,7 +773,7 @@ export default function GlobalSearch() {
           </button>
         </div>
         <div className="mt-2 text-[11px] text-slate-500">
-          快捷键：`/` 或 `Ctrl+K` 打开。前缀筛选：`key:` `card:` `cat:` `desc:` `wan:` `lan:` `/命令`。二级快捷键：`Alt+E/D/C/L/W`。
+          快捷键：`/` 或 `Ctrl+K` 打开。前缀筛选：`key:` `card:` `cat:` `desc:` `wan:` `lan:` `/命令`。二级快捷键：`Alt+E/D/C/L/W`。可直接输入 `/xxx` 执行对应命令。
         </div>
 
         <div className="mt-3 grid gap-3 lg:grid-cols-[minmax(0,1fr)_300px]">
@@ -801,9 +833,14 @@ export default function GlobalSearch() {
                         <div className="truncate text-sm text-slate-100">{highlightText(result.command.title, parsedQuery)}</div>
                         <div className="truncate text-xs text-slate-400">{result.command.description}</div>
                       </div>
-                      <span className="rounded-md border border-white/15 bg-white/5 px-2 py-1 text-[10px] text-slate-300">
-                        命令
-                      </span>
+                      <div className="flex items-center gap-1">
+                        <span className="rounded-md border border-cyan-300/30 bg-cyan-500/15 px-2 py-1 text-[10px] text-cyan-100">
+                          /{result.command.trigger}
+                        </span>
+                        <span className="rounded-md border border-white/15 bg-white/5 px-2 py-1 text-[10px] text-slate-300">
+                          命令
+                        </span>
+                      </div>
                     </button>
                   );
                 }
@@ -941,6 +978,14 @@ export default function GlobalSearch() {
               <div className="space-y-2">
                 <div className="text-sm font-semibold text-slate-100">{activeResult.command.title}</div>
                 <div className="text-xs text-slate-300">{activeResult.command.description}</div>
+                <div className="text-[11px] text-cyan-200">
+                  指令：<code>/{activeResult.command.trigger}</code>
+                  {activeResult.command.aliases?.length ? (
+                    <>
+                      {' '}（别名：{activeResult.command.aliases.map(alias => `/${alias}`).join('、')}）
+                    </>
+                  ) : null}
+                </div>
                 <div className="text-[11px] text-slate-500">命令关键词：{activeResult.command.keywords.join(' / ')}</div>
               </div>
             ) : (

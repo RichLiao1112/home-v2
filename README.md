@@ -85,6 +85,18 @@ docker compose up -d --build
 - `lan:`：仅搜索 LAN 地址
 - `/xxx`：命令模式
 
+命令指令（可直接输入并回车执行）：
+
+- `/settings`（别名：`/layout`、`/page-settings`）：打开页面设置
+- `/snapshot`（别名：`/snapshots`、`/rollback`）：打开快照管理
+- `/recycle`（别名：`/trash`、`/bin`）：打开回收站
+- `/key`（别名：`/keys`、`/switch-key`）：进入 key 搜索模式
+- `/create-key`（别名：`/new-key`、`/add-key`）：新建配置 key
+- `/delete-key`（别名：`/remove-key`）：删除当前配置 key
+- `/next-key`（别名：`/key-next`）：切换到下一个 key
+- `/prev-key`（别名：`/previous-key`、`/key-prev`）：切换到上一个 key
+- `/snapshot-now`（别名：`/create-snapshot`）：立即创建快照
+
 卡片二级快捷键（选中卡片后）：
 
 - `Alt+E`：编辑
