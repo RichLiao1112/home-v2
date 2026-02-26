@@ -2,10 +2,10 @@ import { NextRequest, NextResponse } from 'next/server';
 import path from 'path';
 import { writeFile, mkdir } from 'fs/promises';
 import { isAuthorizedRequest } from '@/server/auth';
-import { getMediaDir } from '@/server/data-store';
 
 const ACCEPTED_TYPES = ['image/png', 'image/jpeg', 'image/webp', 'image/gif', 'image/svg+xml'];
 const MAX_FILE_SIZE = 5 * 1024 * 1024;
+const ASSETS_DIR = process.env.ASSETS_DIR || path.join(process.cwd(), 'assets');
 
 export async function POST(req: NextRequest) {
   if (!isAuthorizedRequest(req)) {
@@ -28,17 +28,16 @@ export async function POST(req: NextRequest) {
 
   const ext = path.extname(file.name || '').replace('.', '') || 'png';
   const filename = `${Date.now()}-${Math.random().toString(36).slice(2, 8)}.${ext}`;
-  const mediaDir = getMediaDir();
 
-  await mkdir(mediaDir, { recursive: true });
+  await mkdir(ASSETS_DIR, { recursive: true });
   const buffer = Buffer.from(await file.arrayBuffer());
-  await writeFile(path.join(mediaDir, filename), buffer);
+  await writeFile(path.join(ASSETS_DIR, filename), buffer);
 
   return NextResponse.json({
     success: true,
     data: {
       filename,
-      url: `/media/${filename}`,
+      url: `/assets/${filename}`,
     },
   });
 }

@@ -162,7 +162,7 @@ export default function CardEditForm() {
               type="text"
               value={formData.cover}
               onChange={e => setFormData({ ...formData, cover: e.target.value })}
-              placeholder="https://... 或 /media/xxx.png"
+              placeholder="https://... 或 /assets/xxx.png"
               className={fieldClassName}
             />
             <label className="motion-btn-hover inline-flex cursor-pointer items-center gap-2 whitespace-nowrap rounded-xl border border-white/15 bg-white/5 px-3 py-2 text-sm text-slate-200 transition hover:bg-white/10">

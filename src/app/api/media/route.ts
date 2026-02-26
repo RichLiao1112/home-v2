@@ -5,7 +5,7 @@ import { isAuthorizedRequest } from '@/server/auth';
 import { getMediaDir } from '@/server/data-store';
 
 const IMAGE_EXTENSIONS = new Set(['.png', '.jpg', '.jpeg', '.webp', '.gif', '.svg']);
-const ASSETS_DIR = process.env.ASSETS_DIR || '';
+const ASSETS_DIR = process.env.ASSETS_DIR || path.join(process.cwd(), 'assets');
 const MAX_DEPTH = 3;
 
 const walkImageFiles = async (rootDir: string, depth = 0, base = ''): Promise<string[]> => {
