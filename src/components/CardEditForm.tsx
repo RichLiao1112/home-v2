@@ -188,7 +188,7 @@ export default function CardEditForm() {
                 className={`${fieldClassName} pl-9`}
               />
             </div>
-            <div className="grid max-h-40 grid-cols-4 gap-2 overflow-y-auto">
+            <div className="scrollbar-hidden grid max-h-40 grid-cols-4 gap-2 overflow-y-auto">
               {mediaResults.length === 0 ? (
                 <p className="col-span-4 text-xs text-slate-400">暂无匹配图片</p>
               ) : (

@@ -88,7 +88,15 @@ export default function Header() {
         <div className="flex items-center justify-between gap-3">
           <div className="flex min-w-0 items-center gap-3">
             <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-gradient-to-br from-indigo-500 to-cyan-500 shadow-lg shadow-indigo-900/30">
-              <Sparkles className="h-5 w-5 text-white" />
+              {layout.head?.siteImage ? (
+                <img
+                  src={layout.head.siteImage}
+                  alt="站点图片"
+                  className="h-6 w-6 rounded object-contain"
+                />
+              ) : (
+                <Sparkles className="h-5 w-5 text-white" />
+              )}
             </div>
             <div className="min-w-0">
               <h1 className="truncate text-base font-semibold text-slate-100 sm:text-lg">

@@ -23,6 +23,7 @@ export interface Category {
 export interface HeadConfig {
   name?: string;
   subtitle?: string;
+  siteImage?: string;
   backgroundImage?: string;
   backgroundBlur?: number;
   unsplashCollectionId?: string;
@@ -84,6 +85,7 @@ export const createDefaultData = (): AppData => {
       head: {
         name: 'Home',
         subtitle: '',
+        siteImage: '',
         backgroundBlur: 0,
         unsplashCollectionId: '',
         desktopColumns: 4,
@@ -117,6 +119,7 @@ const convertLegacyPayload = (payload: unknown): AppData | null => {
     layout: {
       head: {
         name: candidate.layout?.head?.name || 'Home',
+        siteImage: '',
         backgroundImage: candidate.layout?.head?.backgroundImage || '',
         backgroundBlur: candidate.layout?.head?.backgroundBlur ?? 0,
         unsplashCollectionId: '',
@@ -175,6 +178,7 @@ export const normalizeData = (payload: AppData | Record<string, unknown>): AppDa
       ...(normalizedPayload.layout || createDefaultData().layout),
       head: {
         ...(normalizedPayload.layout?.head || createDefaultData().layout?.head),
+        siteImage: normalizedPayload.layout?.head?.siteImage || '',
         backgroundBlur: Math.min(Math.max(normalizedPayload.layout?.head?.backgroundBlur ?? 0, 0), 40),
         unsplashCollectionId: normalizedPayload.layout?.head?.unsplashCollectionId || '',
         desktopColumns: Math.min(Math.max(normalizedPayload.layout?.head?.desktopColumns ?? 4, 1), 8),

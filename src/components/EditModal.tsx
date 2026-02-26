@@ -18,7 +18,7 @@ export default function EditModal() {
           setEditingCard(null);
         }}
       />
-      <div className="relative max-h-[90vh] w-full max-w-lg overflow-y-auto">
+      <div className="scrollbar-hidden relative max-h-[90vh] w-full max-w-lg overflow-y-auto">
         {editingCategory && <CategoryEditForm />}
         {editingCard && <CardEditForm />}
       </div>

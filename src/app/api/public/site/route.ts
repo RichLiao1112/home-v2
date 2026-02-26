@@ -12,6 +12,7 @@ export async function GET(req: NextRequest) {
     site: {
       name: head.name || 'Home',
       subtitle: head.subtitle || '',
+      siteImage: head.siteImage || '',
       backgroundImage: head.backgroundImage || '',
       overlayOpacity: head.overlayOpacity ?? 70,
       navOpacity: head.navOpacity ?? 62,

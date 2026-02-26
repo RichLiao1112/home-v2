@@ -12,6 +12,7 @@ export default function LoginForm() {
   const [site, setSite] = useState({
     name: 'Home',
     subtitle: '容器密码登录，关闭浏览器自动退出',
+    siteImage: '',
     backgroundImage: '',
     overlayOpacity: 70,
     backgroundBlur: 0,
@@ -31,6 +32,7 @@ export default function LoginForm() {
           site?: {
             name?: string;
             subtitle?: string;
+            siteImage?: string;
             backgroundImage?: string;
             overlayOpacity?: number;
             backgroundBlur?: number;
@@ -43,6 +45,7 @@ export default function LoginForm() {
         setSite({
           name: nextSite.name || 'Home',
           subtitle: nextSite.subtitle || '容器密码登录，关闭浏览器自动退出',
+          siteImage: nextSite.siteImage || '',
           backgroundImage: nextSite.backgroundImage || '',
           overlayOpacity: nextSite.overlayOpacity ?? 70,
           backgroundBlur: nextSite.backgroundBlur ?? 0,
@@ -93,7 +96,15 @@ export default function LoginForm() {
         <div className="w-full rounded-3xl border border-white/20 bg-white/10 p-7 shadow-2xl backdrop-blur-xl sm:p-8">
           <div className="mb-8 text-center">
             <div className="mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-2xl bg-gradient-to-br from-indigo-500 to-cyan-500 shadow-lg shadow-indigo-900/30">
-              <Home className="h-8 w-8 text-white" />
+              {site.siteImage ? (
+                <img
+                  src={site.siteImage}
+                  alt="站点图片"
+                  className="h-10 w-10 rounded object-contain"
+                />
+              ) : (
+                <Home className="h-8 w-8 text-white" />
+              )}
             </div>
             <h1 className="mb-2 text-3xl font-bold text-white">{site.name}</h1>
             <p className="flex items-center justify-center gap-2 text-slate-200">

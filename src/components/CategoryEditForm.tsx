@@ -30,6 +30,7 @@ export default function CategoryEditForm() {
   const [layoutData, setLayoutData] = useState({
     name: layout.head?.name || 'Home',
     subtitle: layout.head?.subtitle || '',
+    siteImage: layout.head?.siteImage || '',
     backgroundImage: layout.head?.backgroundImage || '',
     backgroundBlur: String(layout.head?.backgroundBlur ?? 0),
     unsplashCollectionId: layout.head?.unsplashCollectionId || '',
@@ -105,6 +106,7 @@ export default function CategoryEditForm() {
           ...layout.head,
           name: layoutData.name.trim() || 'Home',
           subtitle: layoutData.subtitle.trim(),
+          siteImage: layoutData.siteImage.trim(),
           backgroundImage: layoutData.backgroundImage.trim(),
           backgroundBlur: Math.min(Math.max(Number(layoutData.backgroundBlur || 0), 0), 40),
           unsplashCollectionId: layoutData.unsplashCollectionId.trim(),
@@ -198,6 +200,16 @@ export default function CategoryEditForm() {
                 type="text"
                 value={layoutData.subtitle}
                 onChange={e => setLayoutData({ ...layoutData, subtitle: e.target.value })}
+                className={fieldClassName}
+              />
+            </div>
+            <div>
+              <label className="mb-1 block text-sm font-medium text-slate-200">站点图片 URL</label>
+              <input
+                type="text"
+                value={layoutData.siteImage}
+                onChange={e => setLayoutData({ ...layoutData, siteImage: e.target.value })}
+                placeholder="/assets/logo.png"
                 className={fieldClassName}
               />
             </div>
@@ -431,7 +443,7 @@ export default function CategoryEditForm() {
                   </div>
                 )}
               </div>
-              <div className="grid max-h-44 min-h-44 grid-cols-4 gap-2 overflow-y-auto">
+              <div className="scrollbar-hidden grid max-h-44 min-h-44 grid-cols-4 gap-2 overflow-y-auto">
                 {unsplashPhotos.length > 0 ? (
                   unsplashPhotos.map(photo => (
                     <button
@@ -468,7 +480,7 @@ export default function CategoryEditForm() {
                   />
                 </div>
               </div>
-              <div className="grid max-h-40 min-h-40 grid-cols-4 gap-2 overflow-y-auto">
+              <div className="scrollbar-hidden grid max-h-40 min-h-40 grid-cols-4 gap-2 overflow-y-auto">
                 {mediaLoading ? (
                   <p className="col-span-4 flex items-center justify-center text-xs text-slate-400">搜索中...</p>
                 ) : mediaResults.length === 0 ? (
