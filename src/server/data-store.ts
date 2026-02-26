@@ -87,17 +87,18 @@ const normalizeSnapshotDb = (payload: unknown): SnapshotDB => {
         if (!item || typeof item !== 'object') return null;
         const record = item as Partial<SnapshotItem>;
         if (!record.id || !record.createdAt || !record.hash || !record.data) return null;
-        return {
+        const normalizedItem: SnapshotItem = {
           id: String(record.id),
           key,
           createdAt: String(record.createdAt),
           reason: (record.reason as SnapshotReason) || 'manual',
-          note: record.note ? String(record.note) : undefined,
           hash: String(record.hash),
           data: normalizeData(record.data as AppData | Record<string, unknown>),
-        } satisfies SnapshotItem;
+        };
+        if (record.note) normalizedItem.note = String(record.note);
+        return normalizedItem;
       })
-      .filter((it): it is SnapshotItem => Boolean(it))
+      .filter((it): it is SnapshotItem => it !== null)
       .sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime())
       .slice(0, SNAPSHOT_MAX_PER_KEY);
     if (items.length) db[key] = items;
