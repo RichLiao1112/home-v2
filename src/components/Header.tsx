@@ -2,26 +2,24 @@
 
 import { useCallback, useEffect, useState } from 'react';
 import type { CSSProperties } from 'react';
-import { usePathname, useRouter, useSearchParams } from 'next/navigation';
+import { useRouter } from 'next/navigation';
 import { useAuthStore } from '@/stores/authStore';
 import { useAppStore } from '@/stores/appStore';
 import { KeyRound, LayoutPanelTop, LogOut, Plus, Sparkles, Trash2 } from 'lucide-react';
 
 export default function Header() {
   const router = useRouter();
-  const pathname = usePathname();
-  const searchParams = useSearchParams();
   const { logout } = useAuthStore();
   const { setEditingCategory, categories, layout, currentKey, configKeys, loadData, createConfigKey, deleteConfigKey } =
     useAppStore();
   const [isScrolled, setIsScrolled] = useState(false);
 
   const updateUrlKey = useCallback((key: string) => {
-    const params = new URLSearchParams(searchParams.toString());
-    params.set('key', key);
-    const query = params.toString();
-    router.replace(query ? `${pathname}?${query}` : pathname, { scroll: false });
-  }, [pathname, router, searchParams]);
+    if (typeof window === 'undefined') return;
+    const url = new URL(window.location.href);
+    url.searchParams.set('key', key);
+    router.replace(`${url.pathname}${url.search}${url.hash}`, { scroll: false });
+  }, [router]);
 
   const handleSelectKey = (key: string) => {
     if (!key || key === currentKey) return;
@@ -49,9 +47,11 @@ export default function Header() {
 
   useEffect(() => {
     if (!currentKey) return;
-    if (searchParams.get('key') === currentKey) return;
+    if (typeof window === 'undefined') return;
+    const currentKeyInUrl = new URLSearchParams(window.location.search).get('key')?.trim();
+    if (currentKeyInUrl === currentKey) return;
     updateUrlKey(currentKey);
-  }, [currentKey, searchParams, updateUrlKey]);
+  }, [currentKey, updateUrlKey]);
 
   const navOpacityFromConfig = Math.min(Math.max(layout.head?.navOpacity ?? 62, 10), 100);
   const baseOpacity = navOpacityFromConfig / 100;

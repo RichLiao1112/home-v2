@@ -2,7 +2,6 @@
 
 import type { CSSProperties } from 'react';
 import { useEffect } from 'react';
-import { useSearchParams } from 'next/navigation';
 import { useAuthStore } from '@/stores/authStore';
 import { useAppStore } from '@/stores/appStore';
 import LoginForm from '@/components/LoginForm';
@@ -12,8 +11,6 @@ import AddButton from '@/components/AddButton';
 import EditModal from '@/components/EditModal';
 
 export default function Home() {
-  const searchParams = useSearchParams();
-  const keyFromUrl = searchParams.get('key')?.trim() || '';
   const { isAuthenticated, isChecking, checkAuth } = useAuthStore();
   const { categories, layout, loadData, saveData, isLoading, isSaving, error } = useAppStore();
 
@@ -23,8 +20,10 @@ export default function Home() {
 
   useEffect(() => {
     if (!isAuthenticated) return;
+    const keyFromUrl =
+      typeof window !== 'undefined' ? new URLSearchParams(window.location.search).get('key')?.trim() : '';
     loadData(keyFromUrl || undefined).catch(() => undefined);
-  }, [isAuthenticated, keyFromUrl, loadData]);
+  }, [isAuthenticated, loadData]);
 
   useEffect(() => {
     if (!isAuthenticated || isLoading) return;

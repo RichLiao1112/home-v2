@@ -2,12 +2,10 @@
 
 import type { CSSProperties } from 'react';
 import { useEffect, useState } from 'react';
-import { useSearchParams } from 'next/navigation';
 import { useAuthStore } from '@/stores/authStore';
 import { Home, LockKeyhole, ShieldCheck } from 'lucide-react';
 
 export default function LoginForm() {
-  const searchParams = useSearchParams();
   const [password, setPassword] = useState('');
   const [error, setError] = useState('');
   const [pending, setPending] = useState(false);
@@ -21,7 +19,8 @@ export default function LoginForm() {
   const { login } = useAuthStore();
 
   useEffect(() => {
-    const keyFromUrl = searchParams.get('key')?.trim();
+    const keyFromUrl =
+      typeof window !== 'undefined' ? new URLSearchParams(window.location.search).get('key')?.trim() : '';
     const keyFromStorage =
       (typeof window !== 'undefined' && window.localStorage.getItem('home-v2-current-key')) || 'default';
     const key = keyFromUrl || keyFromStorage || 'default';
@@ -50,7 +49,7 @@ export default function LoginForm() {
         });
       })
       .catch(() => undefined);
-  }, [searchParams]);
+  }, []);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
