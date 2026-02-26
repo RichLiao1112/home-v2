@@ -18,11 +18,8 @@ pnpm-debug.log*
 
 # runtime data (keep folder structure only)
 data/*.json
-media/*
 !data/.gitkeep
-!media/.gitkeep
-!media/imgs/
-!media/imgs/**
+!media/
 
 # misc
 .DS_Store
