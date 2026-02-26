@@ -3,6 +3,7 @@
 import { useCallback, useEffect, useState } from 'react';
 import type { CSSProperties } from 'react';
 import { useRouter } from 'next/navigation';
+import { createPortal } from 'react-dom';
 import { useAuthStore } from '@/stores/authStore';
 import { useAppStore } from '@/stores/appStore';
 import { apiCreateSnapshot, apiDeleteSnapshot, apiListSnapshots, apiRestoreSnapshot, type SnapshotMeta } from '@/lib/api';
@@ -20,6 +21,7 @@ export default function Header() {
   const [snapshots, setSnapshots] = useState<SnapshotMeta[]>([]);
   const [snapshotLoading, setSnapshotLoading] = useState(false);
   const [snapshotBusy, setSnapshotBusy] = useState(false);
+  const [canUsePortal, setCanUsePortal] = useState(false);
 
   const loadSnapshots = useCallback(async () => {
     setSnapshotLoading(true);
@@ -51,6 +53,10 @@ export default function Header() {
     if (!window.confirm(`确认删除配置 "${currentKey}" 吗？`)) return;
     await deleteConfigKey(currentKey);
   };
+
+  useEffect(() => {
+    setCanUsePortal(true);
+  }, []);
 
   useEffect(() => {
     let rafId = 0;
@@ -133,6 +139,85 @@ export default function Header() {
     backgroundColor: `rgba(2, 6, 23, ${navOpacity.toFixed(2)})`,
     borderColor: isScrolled ? 'rgba(255, 255, 255, 0.18)' : 'rgba(255, 255, 255, 0.12)',
   };
+
+  const snapshotDialog =
+    snapshotOpen && canUsePortal
+      ? createPortal(
+          <div className="fixed inset-0 z-[130] overflow-y-auto p-4 sm:p-6">
+            <div
+              className="absolute inset-0 bg-slate-950/75"
+              onClick={() => !snapshotBusy && setSnapshotOpen(false)}
+            />
+            <div className="relative mx-auto mt-16 w-full max-w-2xl rounded-2xl border border-white/15 bg-slate-900/95 p-5 shadow-2xl sm:mt-20">
+              <div className="mb-4 flex items-center justify-between gap-2">
+                <div>
+                  <h3 className="text-base font-semibold text-slate-100">配置快照</h3>
+                  <p className="text-xs text-slate-400">当前配置：{currentKey}</p>
+                </div>
+                <div className="flex items-center gap-2">
+                  <button
+                    onClick={handleCreateSnapshot}
+                    disabled={snapshotBusy}
+                    className="motion-btn-hover rounded-lg border border-white/15 bg-white/10 px-3 py-1.5 text-xs text-slate-100 disabled:opacity-50"
+                  >
+                    {snapshotBusy ? '处理中...' : '立即创建快照'}
+                  </button>
+                  <button
+                    onClick={() => setSnapshotOpen(false)}
+                    className="rounded-lg border border-white/15 bg-white/5 px-3 py-1.5 text-xs text-slate-200"
+                  >
+                    关闭
+                  </button>
+                </div>
+              </div>
+              <div className="scrollbar-hidden max-h-[min(56vh,520px)] overflow-y-auto rounded-xl border border-white/10 bg-slate-900/50">
+                {snapshotLoading ? (
+                  <div className="flex items-center justify-center gap-2 py-10 text-slate-400">
+                    <Loader2 className="h-4 w-4 animate-spin" />
+                    <span className="text-sm">正在加载快照...</span>
+                  </div>
+                ) : snapshots.length === 0 ? (
+                  <div className="py-10 text-center text-sm text-slate-400">还没有快照，先创建一个吧。</div>
+                ) : (
+                  snapshots.map(item => (
+                    <div
+                      key={item.id}
+                      className="flex items-center justify-between gap-3 border-b border-white/10 px-3 py-2.5 last:border-b-0"
+                    >
+                      <div className="min-w-0">
+                        <div className="truncate text-sm text-slate-100">
+                          {new Date(item.createdAt).toLocaleString()}
+                          <span className="ml-2 rounded-full border border-white/15 bg-white/5 px-1.5 py-0.5 text-[10px] text-slate-300">
+                            {formatSnapshotReason(item.reason)}
+                          </span>
+                        </div>
+                        <div className="truncate text-xs text-slate-400">{item.note || '无备注'}</div>
+                      </div>
+                      <div className="flex shrink-0 items-center gap-2">
+                        <button
+                          onClick={() => void handleRestoreSnapshot(item.id)}
+                          disabled={snapshotBusy}
+                          className="motion-btn-hover rounded-md border border-cyan-400/30 bg-cyan-500/15 px-2.5 py-1 text-xs text-cyan-100 disabled:opacity-50"
+                        >
+                          恢复到此版本
+                        </button>
+                        <button
+                          onClick={() => void handleDeleteSnapshot(item.id)}
+                          disabled={snapshotBusy}
+                          className="motion-btn-hover rounded-md border border-rose-400/30 bg-rose-500/10 px-2.5 py-1 text-xs text-rose-200 disabled:opacity-50"
+                        >
+                          删除
+                        </button>
+                      </div>
+                    </div>
+                  ))
+                )}
+              </div>
+            </div>
+          </div>,
+          document.body
+        )
+      : null;
 
   return (
     <header
@@ -305,80 +390,7 @@ export default function Header() {
           </button>
         </div>
       </div>
-      {snapshotOpen ? (
-        <div className="fixed inset-0 z-[120] overflow-y-auto p-4 sm:p-6">
-          <div
-            className="absolute inset-0 bg-slate-950/75"
-            onClick={() => !snapshotBusy && setSnapshotOpen(false)}
-          />
-          <div className="relative mx-auto mt-16 w-full max-w-2xl rounded-2xl border border-white/15 bg-slate-900/95 p-5 shadow-2xl sm:mt-20">
-            <div className="mb-4 flex items-center justify-between gap-2">
-              <div>
-                <h3 className="text-base font-semibold text-slate-100">配置快照</h3>
-                <p className="text-xs text-slate-400">当前配置：{currentKey}</p>
-              </div>
-              <div className="flex items-center gap-2">
-                <button
-                  onClick={handleCreateSnapshot}
-                  disabled={snapshotBusy}
-                  className="motion-btn-hover rounded-lg border border-white/15 bg-white/10 px-3 py-1.5 text-xs text-slate-100 disabled:opacity-50"
-                >
-                  {snapshotBusy ? '处理中...' : '立即创建快照'}
-                </button>
-                <button
-                  onClick={() => setSnapshotOpen(false)}
-                  className="rounded-lg border border-white/15 bg-white/5 px-3 py-1.5 text-xs text-slate-200"
-                >
-                  关闭
-                </button>
-              </div>
-            </div>
-            <div className="scrollbar-hidden max-h-[min(56vh,520px)] overflow-y-auto rounded-xl border border-white/10 bg-slate-900/50">
-              {snapshotLoading ? (
-                <div className="flex items-center justify-center gap-2 py-10 text-slate-400">
-                  <Loader2 className="h-4 w-4 animate-spin" />
-                  <span className="text-sm">正在加载快照...</span>
-                </div>
-              ) : snapshots.length === 0 ? (
-                <div className="py-10 text-center text-sm text-slate-400">还没有快照，先创建一个吧。</div>
-              ) : (
-                snapshots.map(item => (
-                  <div
-                    key={item.id}
-                    className="flex items-center justify-between gap-3 border-b border-white/10 px-3 py-2.5 last:border-b-0"
-                  >
-                    <div className="min-w-0">
-                      <div className="truncate text-sm text-slate-100">
-                        {new Date(item.createdAt).toLocaleString()}
-                        <span className="ml-2 rounded-full border border-white/15 bg-white/5 px-1.5 py-0.5 text-[10px] text-slate-300">
-                          {formatSnapshotReason(item.reason)}
-                        </span>
-                      </div>
-                      <div className="truncate text-xs text-slate-400">{item.note || '无备注'}</div>
-                    </div>
-                    <div className="flex shrink-0 items-center gap-2">
-                      <button
-                        onClick={() => void handleRestoreSnapshot(item.id)}
-                        disabled={snapshotBusy}
-                        className="motion-btn-hover rounded-md border border-cyan-400/30 bg-cyan-500/15 px-2.5 py-1 text-xs text-cyan-100 disabled:opacity-50"
-                      >
-                        恢复到此版本
-                      </button>
-                      <button
-                        onClick={() => void handleDeleteSnapshot(item.id)}
-                        disabled={snapshotBusy}
-                        className="motion-btn-hover rounded-md border border-rose-400/30 bg-rose-500/10 px-2.5 py-1 text-xs text-rose-200 disabled:opacity-50"
-                      >
-                        删除
-                      </button>
-                    </div>
-                  </div>
-                ))
-              )}
-            </div>
-          </div>
-        </div>
-      ) : null}
+      {snapshotDialog}
     </header>
   );
 }
