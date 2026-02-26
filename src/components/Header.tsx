@@ -87,12 +87,18 @@ export default function Header() {
       <div className="mx-auto w-full max-w-[1720px] px-4 py-3 sm:px-6 sm:py-3.5 lg:px-8">
         <div className="flex items-center justify-between gap-3">
           <div className="flex min-w-0 items-center gap-3">
-            <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-gradient-to-br from-indigo-500 to-cyan-500 shadow-lg shadow-indigo-900/30">
+            <div
+              className={`flex h-10 w-10 shrink-0 items-center justify-center rounded-xl ${
+                layout.head?.siteImage
+                  ? 'border border-white/15 bg-transparent'
+                  : 'bg-gradient-to-br from-indigo-500 to-cyan-500 shadow-lg shadow-indigo-900/30'
+              }`}
+            >
               {layout.head?.siteImage ? (
                 <img
                   src={layout.head.siteImage}
                   alt="站点图片"
-                  className="h-6 w-6 rounded object-contain"
+                  className="h-8 w-8 rounded object-contain"
                 />
               ) : (
                 <Sparkles className="h-5 w-5 text-white" />

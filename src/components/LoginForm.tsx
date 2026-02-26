@@ -95,12 +95,18 @@ export default function LoginForm() {
       <div className="relative mx-auto flex min-h-[calc(100vh-5rem)] w-full max-w-md items-center justify-center">
         <div className="w-full rounded-3xl border border-white/20 bg-white/10 p-7 shadow-2xl backdrop-blur-xl sm:p-8">
           <div className="mb-8 text-center">
-            <div className="mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-2xl bg-gradient-to-br from-indigo-500 to-cyan-500 shadow-lg shadow-indigo-900/30">
+            <div
+              className={`mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-2xl ${
+                site.siteImage
+                  ? 'border border-white/20 bg-transparent'
+                  : 'bg-gradient-to-br from-indigo-500 to-cyan-500 shadow-lg shadow-indigo-900/30'
+              }`}
+            >
               {site.siteImage ? (
                 <img
                   src={site.siteImage}
                   alt="站点图片"
-                  className="h-10 w-10 rounded object-contain"
+                  className="h-14 w-14 rounded object-contain"
                 />
               ) : (
                 <Home className="h-8 w-8 text-white" />
