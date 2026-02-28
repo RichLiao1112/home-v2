@@ -700,7 +700,7 @@ export default function GlobalSearch() {
         .filter(item => !recentOpenIds.has(item.id))
         .slice(0, MAX_RESULTS)
         .map(item => ({ kind: 'card' as const, item, score: 60 }));
-      return [...historyResults, ...commandResults.slice(0, 4), ...keyResults, ...recentCards, ...restCards].slice(0, MAX_RESULTS);
+      return [...historyResults, ...commandResults.slice(0, 4), ...recentCards, ...restCards, ...keyResults].slice(0, MAX_RESULTS);
     }
 
     if (prefixMode === 'cmd') return commandResults.slice(0, MAX_RESULTS);
@@ -716,7 +716,7 @@ export default function GlobalSearch() {
       return cardResults.slice(0, MAX_RESULTS);
     }
 
-    return [...commandResults.slice(0, 3), ...keyResults, ...cardResults].slice(0, MAX_RESULTS);
+    return [...commandResults.slice(0, 3), ...cardResults, ...keyResults].slice(0, MAX_RESULTS);
   }, [configKeys, normalizedQuery, prefixMode, recentActions, recentOpen, searchItemMap, searchItems]);
 
   useEffect(() => {
