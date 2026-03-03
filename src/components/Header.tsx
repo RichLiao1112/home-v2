@@ -14,6 +14,7 @@ import {
   type SnapshotMeta,
 } from '@/lib/api';
 import { lockBodyScroll, unlockBodyScroll } from '@/lib/scroll-lock';
+import WeatherWidget from './WeatherWidget';
 import {
   ArchiveRestore,
   History,
@@ -246,7 +247,7 @@ export default function Header() {
               className="absolute inset-0 bg-slate-950/75"
               onClick={() => !snapshotBusy && setSnapshotOpen(false)}
             />
-            <div className="relative mx-auto mt-16 w-full max-w-2xl rounded-2xl border border-white/15 bg-slate-900/95 p-5 shadow-2xl sm:mt-20">
+            <div className="relative mx-auto mt-16 w-full max-w-2xl rounded-2xl border border-white/15 bg-white/10 p-5 shadow-2xl backdrop-blur-xl sm:mt-20">
               <div className="mb-4 flex items-center justify-between gap-2">
                 <div>
                   <h3 className="text-base font-semibold text-slate-100">配置快照</h3>
@@ -268,7 +269,7 @@ export default function Header() {
                   </button>
                 </div>
               </div>
-              <div className="scrollbar-hidden max-h-[min(56vh,520px)] overflow-y-auto rounded-xl border border-white/10 bg-slate-900/50">
+              <div className="scrollbar-hidden max-h-[min(56vh,520px)] overflow-y-auto rounded-xl border border-white/10 bg-white/5">
                 {snapshotLoading ? (
                   <div className="flex items-center justify-center gap-2 py-10 text-slate-400">
                     <Loader2 className="h-4 w-4 animate-spin" />
@@ -322,7 +323,7 @@ export default function Header() {
       ? createPortal(
           <div className="fixed inset-0 z-[130] overflow-y-auto p-4 sm:p-6">
             <div className="absolute inset-0 bg-slate-950/75" onClick={() => setRecycleOpen(false)} />
-            <div className="relative mx-auto mt-16 w-full max-w-2xl rounded-2xl border border-white/15 bg-slate-900/95 p-5 shadow-2xl sm:mt-20">
+            <div className="relative mx-auto mt-16 w-full max-w-2xl rounded-2xl border border-white/15 bg-white/10 p-5 shadow-2xl backdrop-blur-xl sm:mt-20">
               <div className="mb-4 flex items-center justify-between gap-2">
                 <div>
                   <h3 className="text-base font-semibold text-slate-100">回收站</h3>
@@ -347,7 +348,7 @@ export default function Header() {
                   </button>
                 </div>
               </div>
-              <div className="scrollbar-hidden max-h-[min(60vh,560px)] space-y-4 overflow-y-auto rounded-xl border border-white/10 bg-slate-900/50 p-3">
+              <div className="scrollbar-hidden max-h-[min(60vh,560px)] space-y-4 overflow-y-auto rounded-xl border border-white/10 bg-white/5 p-3">
                 <div className="grid grid-cols-1 gap-2 sm:grid-cols-[1fr,140px]">
                   <div className="relative">
                     <Search className="pointer-events-none absolute left-2.5 top-1/2 h-3.5 w-3.5 -translate-y-1/2 text-slate-500" />
@@ -614,46 +615,21 @@ export default function Header() {
               <p className="hidden truncate text-xs text-slate-400 sm:block">{layout.head?.subtitle || ''}</p>
             </div>
           </div>
-          
+
+          {/* 移动端：仅天气和搜索 */}
           <div className="flex items-center gap-2 sm:hidden">
+            <WeatherWidget />
             <button
               onClick={openGlobalSearch}
               className="motion-btn-hover inline-flex h-9 w-9 items-center justify-center rounded-xl border border-white/15 bg-white/5 text-slate-200"
-              aria-label="打开全局搜索"
+              aria-label="搜索"
             >
               <Search className="h-4 w-4" />
-            </button>
-            <button
-              onClick={() =>
-                setEditingCategory({
-                  id: 'layout-settings',
-                  title: '__layout__',
-                  color: '#3B82F6',
-                  cards: [],
-                })
-              }
-              className="motion-btn-hover inline-flex h-9 w-9 items-center justify-center rounded-xl border border-white/15 bg-white/5 text-slate-200"
-              aria-label="打开页面设置"
-            >
-              <LayoutPanelTop className="h-4 w-4" />
-            </button>
-            <button
-              onClick={openRecycleDialog}
-              className="motion-btn-hover inline-flex h-9 w-9 items-center justify-center rounded-xl border border-white/15 bg-white/5 text-slate-200"
-              aria-label="打开回收站"
-            >
-              <ArchiveRestore className="h-4 w-4" />
-            </button>
-            <button
-              onClick={() => logout()}
-              className="motion-btn-hover inline-flex h-9 w-9 items-center justify-center rounded-xl border border-white/15 bg-white/5 text-slate-200"
-              aria-label="退出"
-            >
-              <LogOut className="h-4 w-4" />
             </button>
           </div>
 
           <div className="hidden items-center gap-2 sm:flex">
+            <WeatherWidget />
             <button
               onClick={openGlobalSearch}
               className="motion-btn-hover inline-flex h-10 cursor-pointer items-center gap-2 whitespace-nowrap rounded-xl border border-white/15 bg-white/5 px-3 text-sm text-slate-200 transition hover:bg-white/10"
@@ -707,7 +683,7 @@ export default function Header() {
                   cards: [],
                 })
               }
-              className="motion-btn-hover inline-flex h-10 min-w-10 cursor-pointer items-center justify-center whitespace-nowrap rounded-xl border border-white/15 bg-white/5 px-3 text-sm text-slate-200 transition hover:bg-white/10 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-cyan-400"
+              className="motion-btn-hover inline-flex h-10 min-w-10 cursor-pointer items-center justify-center whitespace-nowrap rounded-xl border border-white/15 bg-white/5 px-3 text-sm text-slate-200 transition hover:bg-white/10 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white/40"
               aria-label="打开页面设置"
             >
               <LayoutPanelTop className="h-4 w-4" />

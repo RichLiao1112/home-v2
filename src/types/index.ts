@@ -57,11 +57,23 @@ export interface LayoutConfig {
   head?: HeadConfig;
 }
 
+export interface WeatherLocation {
+  id: string;
+  name: string;
+  adcode: string;
+  lat: string;
+  lon: string;
+  country: string;
+  province: string;
+  city: string;
+}
+
 export interface AppData {
   categories: Category[];
   layout?: LayoutConfig;
   recycleBin?: RecycleBin;
   updatedAt?: string;
+  weatherLocations?: WeatherLocation[];
 }
 
 interface LegacyCard {

@@ -844,7 +844,7 @@ export default function GlobalSearch() {
   return (
     <div className="fixed inset-0 z-[120] p-4 sm:p-6">
       <div className="absolute inset-0 bg-slate-950/70" onClick={closeDialog} />
-      <div className="relative mx-auto mt-14 w-full max-w-5xl rounded-2xl border border-white/15 bg-slate-900/95 p-4 shadow-2xl sm:mt-20 sm:p-5">
+      <div className="relative mx-auto mt-14 w-full max-w-5xl rounded-2xl border border-white/15 bg-white/10 p-4 shadow-2xl backdrop-blur-xl sm:mt-20 sm:p-5">
         <div className="relative">
           <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-500" />
           <input
@@ -852,7 +852,7 @@ export default function GlobalSearch() {
             value={query}
             onChange={event => setQuery(event.target.value)}
             placeholder="搜索卡片/配置/命令（支持 key: card: cat: desc: wan: lan: /命令）"
-            className="motion-input-focus h-11 w-full rounded-xl border border-white/15 bg-slate-900/70 pl-9 pr-10 text-sm text-slate-100 placeholder:text-slate-500 outline-none"
+            className="motion-input-focus h-11 w-full rounded-xl border border-white/15 bg-white/10 pl-9 pr-10 text-sm text-slate-100 placeholder:text-slate-500 outline-none"
           />
           <button
             type="button"

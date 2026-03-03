@@ -115,13 +115,13 @@ export default function CardEditForm() {
   };
 
   const fieldClassName =
-    'motion-input-focus w-full rounded-xl border border-white/15 bg-slate-900/70 px-4 py-2.5 text-slate-100 placeholder:text-slate-500 outline-none transition-all focus:border-cyan-400/70 focus:ring-2 focus:ring-cyan-400/30 focus:z-10 box-border';
+    'motion-input-focus w-full rounded-xl border border-white/15 bg-white/10 px-4 py-2.5 text-slate-100 placeholder:text-slate-500 outline-none transition-all focus:border-white/40 focus:bg-white/15 focus:ring-1 focus:ring-white/20 focus:z-10 box-border';
   const selectedCategoryColor = categories.find(cat => cat.id === formData.categoryId)?.color || '';
   const effectiveCoverColor = formData.coverColor || selectedCategoryColor || '#3B82F6';
 
   return (
-    <div className="flex h-[min(86vh,860px)] flex-col overflow-hidden rounded-2xl border border-white/15 bg-slate-900/90 shadow-2xl shadow-slate-950/60 backdrop-blur-xl">
-      <div className="flex shrink-0 items-center justify-between border-b border-white/10 bg-slate-900/80 px-6 py-4">
+    <div className="flex h-[min(86vh,860px)] flex-col overflow-hidden rounded-2xl border border-white/15 bg-white/10 shadow-2xl backdrop-blur-xl">
+      <div className="flex shrink-0 items-center justify-between border-b border-white/10 bg-white/5 px-6 py-4">
         <div className="flex items-center gap-2">
           <Grid3X3 className="h-5 w-5 text-cyan-300" />
           <h2 className="text-lg font-semibold text-slate-100">{isEditing ? '编辑卡片' : '添加卡片'}</h2>
@@ -280,7 +280,7 @@ export default function CardEditForm() {
                       key={item.url}
                       type="button"
                       onClick={() => setFormData({ ...formData, cover: item.url })}
-                      className="motion-btn-hover flex flex-col items-center gap-2 rounded-xl border border-white/15 bg-slate-900/70 p-2"
+                      className="motion-btn-hover flex flex-col items-center gap-2 rounded-xl border border-white/15 bg-white/10 p-2"
                       title={item.name}
                     >
                       <div className="flex h-11 w-11 items-center justify-center rounded-xl bg-slate-800/80 ring-1 ring-white/10">
@@ -305,7 +305,7 @@ export default function CardEditForm() {
                 type="color"
                 value={effectiveCoverColor}
                 onChange={e => setFormData({ ...formData, coverColor: e.target.value })}
-                className="h-10 w-24 cursor-pointer rounded-xl bg-slate-900/70"
+                className="h-10 w-24 cursor-pointer rounded-xl bg-white/10"
               />
               <button
                 type="button"
@@ -321,7 +321,7 @@ export default function CardEditForm() {
             </div>
           </div>
 
-          <label className="flex cursor-pointer items-center gap-2 rounded-xl border border-white/15 bg-slate-900/70 p-3 text-sm text-slate-200">
+          <label className="flex cursor-pointer items-center gap-2 rounded-xl border border-white/15 bg-white/10 p-3 text-sm text-slate-200">
             <input
               type="checkbox"
               checked={formData.openInNewWindow}
@@ -332,13 +332,13 @@ export default function CardEditForm() {
           </label>
         </div>
 
-        <div className="mt-4 shrink-0 border-t border-white/10 bg-slate-900/80 pt-4">
+        <div className="mt-4 shrink-0 border-t border-white/10 pt-4">
           <div className="flex gap-3">
             {isEditing && (
               <button
                 type="button"
                 onClick={handleDelete}
-                className="motion-btn-hover whitespace-nowrap rounded-xl px-4 py-2 text-slate-300 transition-colors hover:bg-rose-500/15 hover:text-rose-200"
+                className="motion-btn-hover whitespace-nowrap rounded-xl border border-white/15 bg-white/10 px-4 py-2 text-slate-300 backdrop-blur-sm transition-all hover:border-rose-300/40 hover:bg-rose-500/20 hover:text-rose-200"
               >
                 删除
               </button>
@@ -347,14 +347,14 @@ export default function CardEditForm() {
             <button
               type="button"
               onClick={() => setEditingCard(null)}
-              className="motion-btn-hover whitespace-nowrap rounded-xl px-4 py-2 text-slate-200 transition-colors hover:bg-white/10"
+              className="motion-btn-hover whitespace-nowrap rounded-xl border border-white/15 bg-white/10 px-4 py-2 text-slate-200 backdrop-blur-sm transition-all hover:bg-white/20"
             >
               取消
             </button>
             <button
               type="submit"
               disabled={!formData.title.trim() || (!formData.wanLink.trim() && !formData.lanLink.trim())}
-              className="motion-btn-hover whitespace-nowrap rounded-xl bg-gradient-to-r from-blue-500 to-indigo-600 px-6 py-2 text-white hover:shadow-lg hover:shadow-blue-500/25 disabled:cursor-not-allowed disabled:opacity-50"
+              className="motion-btn-hover whitespace-nowrap rounded-xl border border-cyan-300/30 bg-cyan-500/20 px-6 py-2 text-white backdrop-blur-sm transition-all hover:border-cyan-300/50 hover:bg-cyan-500/30 hover:shadow-lg hover:shadow-cyan-500/20 disabled:cursor-not-allowed disabled:opacity-50"
             >
               {isEditing ? '保存' : '添加'}
             </button>

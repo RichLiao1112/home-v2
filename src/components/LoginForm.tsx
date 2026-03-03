@@ -138,7 +138,7 @@ export default function LoginForm() {
                   value={password}
                   onChange={e => setPassword(e.target.value)}
                   placeholder="请输入密码"
-                  className="w-full rounded-xl border border-white/20 bg-white/10 py-3.5 pl-12 pr-4 text-base text-white placeholder:text-slate-400 focus:border-cyan-400/70 focus:outline-none focus:ring-2 focus:ring-cyan-400/50"
+                  className="w-full rounded-xl border border-white/20 bg-white/10 py-3.5 pl-12 pr-4 text-base text-white placeholder:text-slate-400 focus:border-white/40 focus:outline-none focus:ring-2 focus:ring-white/20"
                   autoFocus
                 />
               </div>

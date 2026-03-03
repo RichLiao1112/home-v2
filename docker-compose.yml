@@ -8,6 +8,7 @@ services:
     environment:
       - LOGIN_PASSWORD=${LOGIN_PASSWORD:-admin123}
       - UNSPLASH_ACCESS_KEY=${UNSPLASH_ACCESS_KEY:-}
+      - QWEATHER_API_KEY=${QWEATHER_API_KEY:-}
       - DATA_DIR=/app/data
       - MEDIA_DIR=/app/media
       - ASSETS_DIR=/app/assets

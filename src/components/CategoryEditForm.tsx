@@ -180,9 +180,9 @@ export default function CategoryEditForm() {
   };
 
   const fieldClassName =
-    'motion-input-focus w-full rounded-xl border border-white/15 bg-slate-900/70 px-4 py-2.5 text-slate-100 placeholder:text-slate-500 outline-none transition-all focus:border-cyan-400/70 focus:ring-2 focus:ring-cyan-400/30';
+    'motion-input-focus w-full rounded-xl border border-white/15 bg-white/10 px-4 py-2.5 text-slate-100 placeholder:text-slate-500 outline-none transition-all focus:border-white/40 focus:bg-white/15 focus:ring-1 focus:ring-white/20';
   const compactNumberClassName =
-    'motion-input-focus h-8 w-20 rounded-lg border border-white/15 bg-slate-900/70 px-2 text-right text-sm text-slate-100 outline-none';
+    'motion-input-focus h-8 w-20 rounded-lg border border-white/15 bg-white/10 px-2 text-right text-sm text-slate-100 outline-none focus:border-white/40 focus:bg-white/15 focus:ring-1 focus:ring-white/20';
 
   const normalizePercent = (value: string, fallback: number) => {
     const next = Number(value);
@@ -352,11 +352,11 @@ export default function CategoryEditForm() {
 
   return (
     <div
-      className={`overflow-hidden rounded-2xl border border-white/15 bg-slate-900/90 shadow-2xl shadow-slate-950/60 backdrop-blur-xl ${
+      className={`overflow-hidden rounded-2xl border border-white/15 bg-white/10 shadow-2xl shadow-slate-950/60 backdrop-blur-xl ${
         isLayoutMode ? 'flex h-[min(86vh,860px)] flex-col' : ''
       }`}
     >
-      <div className="flex shrink-0 items-center justify-between border-b border-white/10 bg-slate-900/80 px-6 py-4">
+      <div className="flex shrink-0 items-center justify-between border-b border-white/10 bg-white/5 px-6 py-4">
         <div className="flex items-center gap-2">
           {isLayoutMode ? (
             <SlidersHorizontal className="h-5 w-5 text-cyan-300" />
@@ -705,7 +705,7 @@ export default function CategoryEditForm() {
                       ))}
                     </select>
                   ) : (
-                    <div className="flex h-[42px] items-center rounded-xl border border-white/10 bg-slate-900/40 px-3 text-xs text-slate-500">
+                    <div className="flex h-[42px] items-center rounded-xl border border-white/10 bg-white/5 px-3 text-xs text-slate-500">
                       暂无可选集合，先搜索或输入收藏夹 ID。
                     </div>
                   )}
@@ -736,7 +736,7 @@ export default function CategoryEditForm() {
                   <select
                     value={unsplashQuality}
                     onChange={e => setUnsplashQuality(e.target.value as UnsplashQuality)}
-                    className="motion-input-focus h-8 rounded-lg border border-white/15 bg-slate-900/70 px-2 text-xs text-slate-100 outline-none"
+                    className="motion-input-focus h-8 rounded-lg border border-white/15 bg-white/10 px-2 text-xs text-slate-100 outline-none"
                   >
                     <option value="thumb" className="bg-slate-900 text-slate-100">
                       thumb（低）
@@ -770,7 +770,7 @@ export default function CategoryEditForm() {
                                 backgroundImage: resolveUnsplashUrl(photo, unsplashQuality),
                               })
                             }
-                            className={`motion-btn-hover relative overflow-hidden rounded-lg border bg-slate-900/70 ${
+                            className={`motion-btn-hover relative overflow-hidden rounded-lg border bg-white/10 ${
                               selected
                                 ? 'border-cyan-300/80 ring-2 ring-cyan-300/60 shadow-[0_0_0_1px_rgba(34,211,238,0.4)]'
                                 : 'border-white/15'
@@ -831,7 +831,7 @@ export default function CategoryEditForm() {
                             type="button"
                             key={item.url}
                             onClick={() => setLayoutData({ ...layoutData, backgroundImage: item.url })}
-                            className={`motion-btn-hover group relative flex flex-col items-center gap-2 rounded-xl border bg-slate-900/70 p-2 text-left ${
+                            className={`motion-btn-hover group relative flex flex-col items-center gap-2 rounded-xl border bg-white/10 p-2 text-left ${
                               selected
                                 ? 'border-cyan-300/80 ring-2 ring-cyan-300/60 shadow-[0_0_0_1px_rgba(34,211,238,0.4)]'
                                 : 'border-white/15'
@@ -923,13 +923,13 @@ export default function CategoryEditForm() {
         </div>
 
         <div
-          className={`flex gap-3 pt-4 ${isLayoutMode ? 'mt-4 shrink-0 border-t border-white/10 bg-slate-900/80' : ''}`}
+          className={`flex gap-3 pt-4 ${isLayoutMode ? 'mt-4 shrink-0 border-t border-white/10' : ''}`}
         >
           {isEditing && !isLayoutMode && (
             <button
               type="button"
               onClick={handleDelete}
-              className="motion-btn-hover whitespace-nowrap rounded-xl px-4 py-2 text-slate-300 transition-colors hover:bg-rose-500/15 hover:text-rose-200"
+              className="motion-btn-hover whitespace-nowrap rounded-xl border border-white/15 bg-white/10 px-4 py-2 text-slate-300 backdrop-blur-sm transition-all hover:border-rose-300/40 hover:bg-rose-500/20 hover:text-rose-200"
             >
               删除
             </button>
@@ -938,14 +938,14 @@ export default function CategoryEditForm() {
           <button
             type="button"
             onClick={() => setEditingCategory(null)}
-            className="motion-btn-hover whitespace-nowrap rounded-xl px-4 py-2 text-slate-200 transition-colors hover:bg-white/10"
+            className="motion-btn-hover whitespace-nowrap rounded-xl border border-white/15 bg-white/10 px-4 py-2 text-slate-200 backdrop-blur-sm transition-all hover:bg-white/20"
           >
             取消
           </button>
           <button
             type="submit"
             disabled={isLayoutMode ? !layoutData.name.trim() : !formData.title.trim()}
-            className="motion-btn-hover whitespace-nowrap rounded-xl bg-gradient-to-r from-blue-500 to-indigo-600 px-6 py-2 text-white hover:shadow-lg hover:shadow-blue-500/25 disabled:cursor-not-allowed disabled:opacity-50"
+            className="motion-btn-hover whitespace-nowrap rounded-xl border border-cyan-300/30 bg-cyan-500/20 px-6 py-2 text-white backdrop-blur-sm transition-all hover:border-cyan-300/50 hover:bg-cyan-500/30 hover:shadow-lg hover:shadow-cyan-500/20 disabled:cursor-not-allowed disabled:opacity-50"
           >
             保存
           </button>
