@@ -6,7 +6,7 @@ export const metadata: Metadata = {
   title: "Home - Personal Dashboard",
   description: "A modern personal navigation dashboard",
   manifest: "/manifest.webmanifest",
-  themeColor: "#020617",
+  // themeColor: "#020617",
   appleWebApp: {
     capable: true,
     statusBarStyle: "black-translucent",

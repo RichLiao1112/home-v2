@@ -176,3 +176,46 @@ export const apiDeleteSnapshot = async (key: string, snapshotId: string) => {
   });
   return res.ok;
 };
+
+export interface SiteMetadata {
+  title: string;
+  description: string;
+  favicon?: string;
+  url: string;
+  success: boolean;
+  error?: string;
+}
+
+export const apiFetchSiteMetadata = async (url: string): Promise<SiteMetadata | null> => {
+  try {
+    const res = await fetch('/api/meta-fetch', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ url }),
+    });
+    
+    if (!res.ok) {
+      const errorData = await res.json().catch(() => ({}));
+      console.error('[apiFetchSiteMetadata] HTTP error:', res.status, errorData);
+      return {
+        success: false,
+        error: `HTTP ${res.status}: ${errorData.error || res.statusText}`,
+        title: '',
+        description: '',
+        url,
+      };
+    }
+    
+    const json = await res.json();
+    return json as SiteMetadata;
+  } catch (error) {
+    console.error('[apiFetchSiteMetadata] Network error:', error);
+    return {
+      success: false,
+      error: error instanceof Error ? error.message : 'Network error',
+      title: '',
+      description: '',
+      url,
+    };
+  }
+};

@@ -9,8 +9,16 @@ const PRIVATE_HOST_PATTERN =
 
 export const isPrivateHost = (host: string) => PRIVATE_HOST_PATTERN.test(host);
 
+// 旧的实现（保留兼容性）
 export const getBestCardLink = (card: Card, host: string) => {
   if (!card.wanLink && !card.lanLink) return '';
   if (isPrivateHost(host)) return card.lanLink || card.wanLink || '';
+  return card.wanLink || card.lanLink || '';
+};
+
+// 新的实现：基于服务端判断的网络类型
+export const getBestCardLinkByNetworkType = (card: Card, networkType: 'lan' | 'wan') => {
+  if (!card.wanLink && !card.lanLink) return '';
+  if (networkType === 'lan') return card.lanLink || card.wanLink || '';
   return card.wanLink || card.lanLink || '';
 };

@@ -5,8 +5,9 @@ import { Copy, Edit2, Globe, History, KeyRound, Network, Search, Trash2, X } fro
 import { pinyin } from 'pinyin-pro';
 import type { Card } from '@/types';
 import { useAppStore } from '@/stores/appStore';
-import { getBestCardLink } from '@/lib/utils';
+import { getBestCardLink, getBestCardLinkByNetworkType } from '@/lib/utils';
 import { useAuthStore } from '@/stores/authStore';
+import { useNetworkContext, getCachedNetworkContext } from '@/hooks/useNetworkContext';
 import { apiCreateSnapshot, apiLoadSearchIndexAllKeys, type SearchIndexItem } from '@/lib/api';
 import { lockBodyScroll, unlockBodyScroll } from '@/lib/scroll-lock';
 
@@ -353,6 +354,7 @@ export default function GlobalSearch() {
     deleteCard,
   } = useAppStore();
   const { logout } = useAuthStore();
+  const networkContext = useNetworkContext();
   const inputRef = useRef<HTMLInputElement | null>(null);
   const listRef = useRef<HTMLDivElement | null>(null);
   const [open, setOpen] = useState(false);
@@ -507,6 +509,11 @@ export default function GlobalSearch() {
 
   const openCardLink = async (item: SearchItem, mode: 'best' | 'wan' | 'lan') => {
     await ensureKeyLoaded(item.key);
+    
+    // 优先使用缓存的网络上下文判断（服务端真实 IP 判断）
+    const cachedNetwork = getCachedNetworkContext();
+    const networkType = cachedNetwork?.networkType || 'wan';
+    
     const link =
       mode === 'wan'
         ? item.card.wanLink
@@ -587,7 +594,10 @@ export default function GlobalSearch() {
   };
 
   const handleCopyCardLink = async (item: SearchItem) => {
-    const link = getBestCardLink(item.card, window.location.hostname);
+    // 优先使用缓存的网络上下文判断（服务端真实 IP 判断）
+    const cachedNetwork = getCachedNetworkContext();
+    const networkType = cachedNetwork?.networkType || 'wan';
+    const link = getBestCardLinkByNetworkType(item.card, networkType);
     if (!link) return;
     try {
       await navigator.clipboard.writeText(link);

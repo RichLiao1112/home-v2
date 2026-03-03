@@ -1,15 +1,19 @@
 'use client';
 
-import { useEffect, useState } from 'react';
-import { Search, X, Grid3X3, Link, FileText, Loader2, Upload } from 'lucide-react';
+import { useEffect, useState, useCallback, useRef } from 'react';
+import { Search, X, Grid3X3, Link, FileText, Loader2, Upload, Check } from 'lucide-react';
 import { useAppStore } from '@/stores/appStore';
-import { apiSearchMedia, apiUploadImage } from '@/lib/api';
+import { apiSearchMedia, apiUploadImage, apiFetchSiteMetadata } from '@/lib/api';
 
 export default function CardEditForm() {
   const { editingCard, setEditingCard, categories, addCard, updateCard, deleteCard } = useAppStore();
   const [uploading, setUploading] = useState(false);
   const [mediaQuery, setMediaQuery] = useState('');
   const [mediaResults, setMediaResults] = useState<Array<{ name: string; url: string }>>([]);
+  const [fetchingMeta, setFetchingMeta] = useState(false);
+  const [metaFetched, setMetaFetched] = useState(false);
+  const fetchTimeoutRef = useRef<NodeJS.Timeout | null>(null);
+  
   const [formData, setFormData] = useState({
     title: editingCard?.title || '',
     description: editingCard?.description || '',
@@ -24,6 +28,55 @@ export default function CardEditForm() {
   useEffect(() => {
     apiSearchMedia(mediaQuery).then(setMediaResults);
   }, [mediaQuery]);
+
+  // 自动获取网站元数据（支持 WAN 和 LAN 地址）
+  const fetchSiteMetadata = useCallback(async (url: string) => {
+    if (!url || metaFetched) return;
+    
+    // 清除之前的定时器
+    if (fetchTimeoutRef.current) {
+      clearTimeout(fetchTimeoutRef.current);
+    }
+
+    // 延迟 800ms 再请求，避免用户还在输入时频繁请求
+    fetchTimeoutRef.current = setTimeout(async () => {
+      // 验证 URL 格式
+      const urlPattern = /^https?:\/\/.+/i;
+      if (!urlPattern.test(url)) return;
+
+      setFetchingMeta(true);
+
+      try {
+        const data = await apiFetchSiteMetadata(url);
+
+        if (data?.success) {
+          // 自动填充表单（只填充空字段）
+          setFormData(prev => ({
+            ...prev,
+            title: prev.title || data.title || '',
+            description: prev.description || data.description || '',
+            cover: prev.cover || data.favicon || '',
+          }));
+          setMetaFetched(true);
+        }
+      } catch (error) {
+        // 失败时不处理，静默失败
+      } finally {
+        setFetchingMeta(false);
+      }
+    }, 800);
+  }, [metaFetched]);
+
+  // 监听 URL 输入变化（WAN 或 LAN）
+  useEffect(() => {
+    if (!editingCard?.id && !formData.title && !metaFetched) {
+      // 优先使用 WAN 地址，如果没有则使用 LAN 地址
+      const urlToFetch = formData.wanLink || formData.lanLink;
+      if (urlToFetch) {
+        fetchSiteMetadata(urlToFetch);
+      }
+    }
+  }, [formData.wanLink, formData.lanLink, editingCard?.id, formData.title, metaFetched, fetchSiteMetadata]);
 
   if (!editingCard) return null;
 
@@ -62,7 +115,7 @@ export default function CardEditForm() {
   };
 
   const fieldClassName =
-    'motion-input-focus w-full rounded-xl border border-white/15 bg-slate-900/70 px-4 py-2.5 text-slate-100 placeholder:text-slate-500 outline-none transition-all focus:border-cyan-400/70 focus:ring-2 focus:ring-cyan-400/30';
+    'motion-input-focus w-full rounded-xl border border-white/15 bg-slate-900/70 px-4 py-2.5 text-slate-100 placeholder:text-slate-500 outline-none transition-all focus:border-cyan-400/70 focus:ring-2 focus:ring-cyan-400/30 focus:z-10 box-border';
   const selectedCategoryColor = categories.find(cat => cat.id === formData.categoryId)?.color || '';
   const effectiveCoverColor = formData.coverColor || selectedCategoryColor || '#3B82F6';
 
@@ -86,7 +139,7 @@ export default function CardEditForm() {
         className="flex min-h-0 flex-1 flex-col p-6"
       >
         <div className="scrollbar-hidden min-h-0 flex-1 space-y-4 overflow-y-auto pr-1">
-          <div>
+          <div className="px-2">
             <label className="mb-1 block text-sm font-medium text-slate-200">所属分类</label>
             <select
               value={formData.categoryId}
@@ -104,7 +157,7 @@ export default function CardEditForm() {
             </select>
           </div>
 
-          <div>
+          <div className="px-2">
             <label className="mb-1 block text-sm font-medium text-slate-200">卡片名称</label>
             <input
               type="text"
@@ -116,21 +169,61 @@ export default function CardEditForm() {
             />
           </div>
 
-          <div>
+          <div className="px-2">
             <label className="mb-1 flex items-center gap-1 text-sm font-medium text-slate-200">
               <Link className="h-4 w-4" />
               公网地址（WAN）
             </label>
-            <input
-              type="url"
-              value={formData.wanLink}
-              onChange={e => setFormData({ ...formData, wanLink: e.target.value })}
-              placeholder="https://example.com"
-              className={fieldClassName}
-            />
+            <div className="relative">
+              <input
+                type="url"
+                value={formData.wanLink}
+                onChange={e => {
+                  setFormData({ ...formData, wanLink: e.target.value });
+                  setMetaFetched(false);
+                }}
+                placeholder="https://example.com"
+                className={`${fieldClassName} pr-10`}
+              />
+              <div className="absolute right-3 top-1/2 -translate-y-1/2">
+                {fetchingMeta && (
+                  <Loader2 className="h-4 w-4 animate-spin text-cyan-400" />
+                )}
+                {metaFetched && !fetchingMeta && (
+                  <Check className="h-4 w-4 text-green-400" />
+                )}
+              </div>
+            </div>
           </div>
 
-          <div>
+          <div className="px-2">
+            <label className="mb-1 flex items-center gap-1 text-sm font-medium text-slate-200">
+              <Link className="h-4 w-4" />
+              内网地址（LAN，可选）
+            </label>
+            <div className="relative">
+              <input
+                type="url"
+                value={formData.lanLink}
+                onChange={e => {
+                  setFormData({ ...formData, lanLink: e.target.value });
+                  setMetaFetched(false);
+                }}
+                placeholder="http://192.168.x.x:3000"
+                className={fieldClassName}
+              />
+              <div className="absolute right-3 top-1/2 -translate-y-1/2">
+                {fetchingMeta && (
+                  <Loader2 className="h-4 w-4 animate-spin text-cyan-400" />
+                )}
+                {metaFetched && !fetchingMeta && (
+                  <Check className="h-4 w-4 text-green-400" />
+                )}
+              </div>
+            </div>
+          </div>
+
+          <div className="px-2">
             <label className="mb-1 flex items-center gap-1 text-sm font-medium text-slate-200">
               <FileText className="h-4 w-4" />
               备注（可选）
@@ -144,21 +237,8 @@ export default function CardEditForm() {
             />
           </div>
 
-          <div>
-            <label className="mb-1 flex items-center gap-1 text-sm font-medium text-slate-200">
-              <Link className="h-4 w-4" />
-              内网地址（LAN，可选）
-            </label>
-            <input
-              type="url"
-              value={formData.lanLink}
-              onChange={e => setFormData({ ...formData, lanLink: e.target.value })}
-              placeholder="http://192.168.x.x:3000"
-              className={fieldClassName}
-            />
-          </div>
 
-          <div>
+          <div className="px-2">
             <label className="mb-1 block text-sm font-medium text-slate-200">图标 URL（可选）</label>
             <div className="flex gap-2">
               <input
