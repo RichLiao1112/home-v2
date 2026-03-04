@@ -74,7 +74,7 @@ docker-compose up -d
 docker-compose logs -f app
 
 # 服务地址
-# 本地访问：http://my.liveppp.com:13131
+# 本地访问：https://my.liveppp.com:13131
 # 内网访问：http://<内网IP>:3131
 ```
 
@@ -92,7 +92,7 @@ docker-compose logs -f app
 {
   "mcpServers": {
     "weather": {
-      "url": "http://my.liveppp.com:13131/api/mcp/weather"
+      "url": "https://my.liveppp.com:13131/api/mcp/weather"
     }
   }
 }
@@ -110,7 +110,7 @@ docker-compose logs -f app
         "-H", "Content-Type: application/json",
         "-H", "X-API-Key: your-mcp-secret-key",
         "-d", "{\"method\":\"tools/call\",\"params\":{\"name\":\"get_weather\",\"arguments\":{\"location\":\"${INPUT}\"}}}",
-        "http://my.liveppp.com:13131/api/mcp/weather"
+        "https://my.liveppp.com:13131/api/mcp/weather"
       ]
     }
   }
@@ -124,7 +124,7 @@ docker-compose logs -f app
   "mcpServers": {
     "weather": {
       "command": "npx",
-      "args": ["-y", "mcp-client-cli", "http://my.liveppp.com:13131/api/mcp/weather"]
+      "args": ["-y", "mcp-client-cli", "https://my.liveppp.com:13131/api/mcp/weather"]
     }
   }
 }
@@ -137,7 +137,7 @@ docker-compose logs -f app
 **基础调用**：
 
 ```bash
-curl -X POST http://my.liveppp.com:13131/api/mcp/weather \
+curl -X POST https://my.liveppp.com:13131/api/mcp/weather \
   -H "Content-Type: application/json" \
   -d '{
     "method": "tools/call",
@@ -152,7 +152,7 @@ curl -X POST http://my.liveppp.com:13131/api/mcp/weather \
 
 ```bash
 # Header 方式
-curl -X POST http://my.liveppp.com:13131/api/mcp/weather \
+curl -X POST https://my.liveppp.com:13131/api/mcp/weather \
   -H "Content-Type: application/json" \
   -H "X-API-Key: your-mcp-secret-key" \
   -d '{
@@ -164,7 +164,7 @@ curl -X POST http://my.liveppp.com:13131/api/mcp/weather \
   }'
 
 # URL 参数方式
-curl -X POST "http://my.liveppp.com:13131/api/mcp/weather?api_key=your-mcp-secret-key" \
+curl -X POST "https://my.liveppp.com:13131/api/mcp/weather?api_key=your-mcp-secret-key" \
   -H "Content-Type: application/json" \
   -d '{
     "method": "tools/call",
