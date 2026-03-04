@@ -123,10 +123,10 @@ function SortableCard({ categoryId, card, color }: { categoryId: string; card: C
             event.stopPropagation();
             onOpenSpecificLink(card.lanLink);
           }}
-          className={`motion-btn-hover inline-flex h-8 w-full items-center justify-center gap-1 rounded-lg border text-xs font-semibold sm:h-10 sm:gap-1.5 sm:rounded-xl sm:text-sm ${
+          className={`motion-btn-hover inline-flex h-8 w-full items-center justify-center gap-1 rounded-lg border text-xs font-semibold backdrop-blur-xl sm:h-10 sm:gap-1.5 sm:rounded-xl sm:text-sm ${
             card.lanLink
-              ? 'border-white/25 bg-slate-900/55 text-slate-100 shadow-[inset_0_1px_0_rgba(255,255,255,0.08)] hover:bg-slate-800/70'
-              : 'cursor-not-allowed border-white/10 bg-slate-900/35 text-slate-500 opacity-75'
+              ? 'border-white/15 bg-white/10 text-slate-100 hover:bg-white/20'
+              : 'cursor-not-allowed border-white/10 bg-white/5 text-slate-500 opacity-75'
           }`}
           aria-label={card.lanLink ? `打开 ${card.title} 的内网地址` : `${card.title} 暂无内网地址`}
         >
@@ -140,10 +140,10 @@ function SortableCard({ categoryId, card, color }: { categoryId: string; card: C
             event.stopPropagation();
             onOpenSpecificLink(card.wanLink);
           }}
-          className={`motion-btn-hover inline-flex h-8 w-full items-center justify-center gap-1 rounded-lg border text-xs font-semibold sm:h-10 sm:gap-1.5 sm:rounded-xl sm:text-sm ${
+          className={`motion-btn-hover inline-flex h-8 w-full items-center justify-center gap-1 rounded-lg border text-xs font-semibold backdrop-blur-xl sm:h-10 sm:gap-1.5 sm:rounded-xl sm:text-sm ${
             card.wanLink
-              ? 'border-white/25 bg-slate-900/55 text-slate-100 shadow-[inset_0_1px_0_rgba(255,255,255,0.08)] hover:bg-slate-800/70'
-              : 'cursor-not-allowed border-white/10 bg-slate-900/35 text-slate-500 opacity-75'
+              ? 'border-white/15 bg-white/10 text-slate-100 hover:bg-white/20'
+              : 'cursor-not-allowed border-white/10 bg-white/5 text-slate-500 opacity-75'
           }`}
           aria-label={card.wanLink ? `打开 ${card.title} 的公网地址` : `${card.title} 暂无公网地址`}
         >

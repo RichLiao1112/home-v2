@@ -180,7 +180,7 @@ export default function CategoryEditForm() {
   };
 
   const fieldClassName =
-    'motion-input-focus w-full rounded-xl border border-white/15 bg-white/10 px-4 py-2.5 text-slate-100 placeholder:text-slate-500 outline-none transition-all focus:border-white/40 focus:bg-white/15 focus:ring-1 focus:ring-white/20';
+    'motion-input-focus w-full rounded-xl border border-white/15 bg-white/10 px-4 py-2.5 text-slate-100 placeholder:text-slate-500 outline-none focus:border-white/40 focus:bg-white/15 focus:ring-1 focus:ring-white/20';
   const compactNumberClassName =
     'motion-input-focus h-8 w-20 rounded-lg border border-white/15 bg-white/10 px-2 text-right text-sm text-slate-100 outline-none focus:border-white/40 focus:bg-white/15 focus:ring-1 focus:ring-white/20';
 

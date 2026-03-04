@@ -115,7 +115,7 @@ export default function CardEditForm() {
   };
 
   const fieldClassName =
-    'motion-input-focus w-full rounded-xl border border-white/15 bg-white/10 px-4 py-2.5 text-slate-100 placeholder:text-slate-500 outline-none transition-all focus:border-white/40 focus:bg-white/15 focus:ring-1 focus:ring-white/20 focus:z-10 box-border';
+    'motion-input-focus w-full rounded-xl border border-white/15 bg-white/10 px-4 py-2.5 text-slate-100 placeholder:text-slate-500 outline-none focus:border-white/40 focus:bg-white/15 focus:ring-1 focus:ring-white/20 focus:z-10 box-border';
   const selectedCategoryColor = categories.find(cat => cat.id === formData.categoryId)?.color || '';
   const effectiveCoverColor = formData.coverColor || selectedCategoryColor || '#3B82F6';
 

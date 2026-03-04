@@ -223,7 +223,7 @@ export default function WeatherWidget() {
 
           {/* 搜索结果下拉 */}
           {(searchResults.length > 0 || searching) && (
-            <div className="absolute right-0 top-full z-50 mt-2 w-64 rounded-xl border border-white/10 bg-slate-900/95 p-2 shadow-xl backdrop-blur-xl">
+            <div className="absolute right-0 top-full z-50 mt-2 w-64 rounded-xl border border-white/15 bg-white/10 p-2 shadow-xl backdrop-blur-xl">
               {searching ? (
                 <div className="p-2 text-sm text-slate-400">搜索中...</div>
               ) : (
@@ -248,7 +248,7 @@ export default function WeatherWidget() {
 
           {/* 显示保存的历史位置 */}
           {showSearch && !searchQuery && savedLocations.length > 0 && (
-            <div className="absolute right-0 top-full z-50 mt-2 w-64 rounded-xl border border-white/10 bg-slate-900/95 p-2 shadow-xl backdrop-blur-xl">
+            <div className="absolute right-0 top-full z-50 mt-2 w-64 rounded-xl border border-white/15 bg-white/10 p-2 shadow-xl backdrop-blur-xl">
               <div className="mb-2 flex items-center gap-1 px-2 text-xs text-slate-500">
                 <Clock className="h-3 w-3" />
                 <span>最近选择</span>
@@ -301,7 +301,7 @@ export default function WeatherWidget() {
           <span className="text-slate-400">{currentCity || weather.location}</span>
 
           {/* 悬停显示详细信息 */}
-          <div className="absolute right-0 top-full z-50 mt-2 hidden w-48 rounded-xl border border-white/10 bg-slate-900/95 p-3 shadow-xl backdrop-blur-xl group-hover:block">
+          <div className="absolute right-0 top-full z-50 mt-2 hidden w-48 rounded-xl border border-white/15 bg-white/10 p-3 shadow-xl backdrop-blur-xl group-hover:block">
             <div className="space-y-2 text-sm">
               <div className="flex items-center justify-between">
                 <span className="text-slate-400">体感温度</span>
