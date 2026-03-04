@@ -183,13 +183,31 @@ export default function WeatherWidget() {
     return () => clearTimeout(timer);
   }, [searchQuery]);
 
-  // 检查天气API是否配置
+  // 检查天气API是否配置并加载天气数据
   useEffect(() => {
     const checkConfig = async () => {
       try {
         const res = await fetch('/api/weather/status');
         const data = await res.json();
-        setIsConfigured(data.configured);
+        if (!data.configured) {
+          setIsConfigured(false);
+          return;
+        }
+        setIsConfigured(true);
+
+        // 加载保存的城市名称
+        const savedCity = localStorage.getItem('home-v2-weather-city');
+        if (savedCity) {
+          setCurrentCity(savedCity);
+        }
+
+        // 加载数据
+        loadSavedLocations();
+        fetchWeather();
+
+        // 每 30 分钟自动刷新
+        const interval = setInterval(fetchWeather, 30 * 60 * 1000);
+        return () => clearInterval(interval);
       } catch {
         setIsConfigured(false);
       }
@@ -201,21 +219,6 @@ export default function WeatherWidget() {
   if (isConfigured === false) {
     return null;
   }
-
-  useEffect(() => {
-    loadSavedLocations();
-    fetchWeather();
-
-    // 加载保存的城市名称
-    const savedCity = localStorage.getItem('home-v2-weather-city');
-    if (savedCity) {
-      setCurrentCity(savedCity);
-    }
-
-    // 每 30 分钟自动刷新
-    const interval = setInterval(fetchWeather, 30 * 60 * 1000);
-    return () => clearInterval(interval);
-  }, []);
 
   return (
     <div ref={containerRef} className="relative">
