@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
+import { checkAndIncrementRateLimit } from '@/server/qweather-rate-limit';
 
 // 天气图标映射
 const weatherIconMap: Record<string, string> = {
@@ -135,35 +136,73 @@ const tools = [
 ];
 
 // MCP 工具处理函数
-async function handleTool(name: string, args: any) {
+async function handleTool(name: string, args: any, useRateLimit: boolean = true) {
   switch (name) {
     case 'get_weather': {
       const location = args.location || '101010100';
+
+      // 检查缓存
       const cached = getWeatherCache(location);
       if (cached) {
-        return { content: [{ type: 'text', text: JSON.stringify({ ...cached, cached: true }, null, 2) }] };
+        return { content: [{ type: 'text', text: JSON.stringify({ ...cached, cached: true }, null, 2) }], usedRateLimit: false };
       }
+
+      // 需要调用外部 API 时检查 rate limit
+      if (useRateLimit) {
+        const rateLimit = await checkAndIncrementRateLimit(150);
+        if (!rateLimit.allowed) {
+          throw new Error('今日API调用次数已达上限(150次)');
+        }
+      }
+
       const data = await fetchWeatherData(location);
       setWeatherCache(location, data);
-      return { content: [{ type: 'text', text: JSON.stringify({ success: true, ...data }, null, 2) }] };
+      return { content: [{ type: 'text', text: JSON.stringify({ success: true, ...data }, null, 2) }], usedRateLimit: true };
     }
     case 'search_city': {
+      // 搜索城市也需要调用外部 API，检查 rate limit
+      if (useRateLimit) {
+        const rateLimit = await checkAndIncrementRateLimit(150);
+        if (!rateLimit.allowed) {
+          throw new Error('今日API调用次数已达上限(150次)');
+        }
+      }
       const results = await searchCity(args.query);
-      return { content: [{ type: 'text', text: JSON.stringify({ success: true, locations: results }, null, 2) }] };
+      return { content: [{ type: 'text', text: JSON.stringify({ success: true, locations: results }, null, 2) }], usedRateLimit: true };
     }
     case 'get_weather_status': {
       const apiKey = process.env.QWEATHER_API_KEY;
-      return { content: [{ type: 'text', text: JSON.stringify({ configured: !!apiKey && apiKey.trim() !== '' }, null, 2) }] };
+      return { content: [{ type: 'text', text: JSON.stringify({ configured: !!apiKey && apiKey.trim() !== '' }, null, 2) }], usedRateLimit: false };
     }
     default:
       throw new Error(`Unknown tool: ${name}`);
   }
 }
 
-// GET 返回 MCP 服务信息
-// MCP 协议处理（无需登录认证）
+// 验证 API Key
+function verifyApiKey(request: NextRequest): boolean {
+  const mcpApiKey = process.env.MCP_API_KEY;
+
+  // 未设置 API Key 时，允许所有请求（兼容旧配置）
+  if (!mcpApiKey || mcpApiKey.trim() === '') {
+    return true;
+  }
+
+  const providedKey = request.headers.get('X-API-Key') || request.nextUrl.searchParams.get('api_key');
+  return providedKey === mcpApiKey;
+}
+
+// MCP 协议处理
 export async function POST(request: NextRequest) {
   try {
+    // 验证 API Key
+    if (!verifyApiKey(request)) {
+      return NextResponse.json(
+        { content: [{ type: 'text', text: 'Error: Invalid or missing API key' }] },
+        { status: 401 }
+      );
+    }
+
     const body = await request.json();
     const { method, params } = body;
 
@@ -176,7 +215,7 @@ export async function POST(request: NextRequest) {
 
     if (method === 'tools/call') {
       const { name, arguments: args } = params;
-      const result = await handleTool(name, args);
+      const result = await handleTool(name, args, true);
       return NextResponse.json({
         content: result.content,
       });
@@ -184,9 +223,11 @@ export async function POST(request: NextRequest) {
 
     return NextResponse.json({ error: 'Unknown method' }, { status: 400 });
   } catch (error) {
+    const errorMessage = error instanceof Error ? error.message : 'Unknown error';
+    const status = errorMessage.includes('已达上限') ? 429 : 500;
     return NextResponse.json(
-      { content: [{ type: 'text', text: `Error: ${error instanceof Error ? error.message : 'Unknown error'}` }] },
-      { status: 500 }
+      { content: [{ type: 'text', text: `Error: ${errorMessage}` }] },
+      { status }
     );
   }
 }
