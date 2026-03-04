@@ -32,6 +32,7 @@ export default function WeatherWidget() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [currentCity, setCurrentCity] = useState<string>('');
+  const [isConfigured, setIsConfigured] = useState<boolean | null>(null);
 
   // 搜索相关状态
   const [showSearch, setShowSearch] = useState(false);
@@ -181,6 +182,25 @@ export default function WeatherWidget() {
     }, 500);
     return () => clearTimeout(timer);
   }, [searchQuery]);
+
+  // 检查天气API是否配置
+  useEffect(() => {
+    const checkConfig = async () => {
+      try {
+        const res = await fetch('/api/weather/status');
+        const data = await res.json();
+        setIsConfigured(data.configured);
+      } catch {
+        setIsConfigured(false);
+      }
+    };
+    checkConfig();
+  }, []);
+
+  // 如果未配置，不渲染组件
+  if (isConfigured === false) {
+    return null;
+  }
 
   useEffect(() => {
     loadSavedLocations();
