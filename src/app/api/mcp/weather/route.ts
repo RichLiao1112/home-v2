@@ -171,8 +171,8 @@ async function handleTool(name: string, args: any, useRateLimit: boolean = true)
       return { content: [{ type: 'text', text: JSON.stringify({ success: true, locations: results }, null, 2) }], usedRateLimit: true };
     }
     case 'get_weather_status': {
-      // 始终返回已配置，调用时会自行处理错误
-      return { content: [{ type: 'text', text: JSON.stringify({ configured: true }, null, 2) }], usedRateLimit: false };
+      const apiKey = process.env.QWEATHER_API_KEY;
+      return { content: [{ type: 'text', text: JSON.stringify({ configured: !!apiKey && apiKey.trim() !== '' }, null, 2) }], usedRateLimit: false };
     }
     default:
       throw new Error(`Unknown tool: ${name}`);
