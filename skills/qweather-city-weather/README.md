@@ -123,6 +123,13 @@ python3 scripts/qweather_query.py city-weather --query "广州" --preferred-name
 
 - **没有输出或输出乱码**
   - 可能是接口返回 gzip 压缩。脚本已内置解压逻辑，建议使用最新版本脚本。
+  - 如果你手动用 `curl` 调试，请加 `--compressed`，例如：
+
+```bash
+curl --compressed -sS -G "https://${QWEATHER_API_HOST}/geo/v2/city/lookup" \
+  --data-urlencode "location=北京" \
+  -H "X-QW-Api-Key: ${QWEATHER_API_KEY}" | jq
+```
 
 - **报错 `Missing API host` / `Missing API key`**
   - 检查 `QWEATHER_API_HOST`、`QWEATHER_API_KEY` 是否已设置，或通过 `--api-host`、`--api-key` 显式传入。
