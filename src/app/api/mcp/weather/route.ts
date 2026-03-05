@@ -78,7 +78,7 @@ async function searchCity(query: string) {
     throw new Error('API not configured');
   }
 
-  const response = await fetch(`https://${apiHost}/v2/city/lookup?location=${encodeURIComponent(query)}&number=10`, {
+  const response = await fetch(`https://${apiHost}/geo/v2/city/lookup?location=${encodeURIComponent(query)}&number=10`, {
     headers: { 'X-QW-Api-Key': apiKey },
     signal: AbortSignal.timeout(5000),
   });
