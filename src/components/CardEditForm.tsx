@@ -158,18 +158,6 @@ export default function CardEditForm() {
           </div>
 
           <div className="px-2">
-            <label className="mb-1 block text-sm font-medium text-slate-200">卡片名称</label>
-            <input
-              type="text"
-              value={formData.title}
-              onChange={e => setFormData({ ...formData, title: e.target.value })}
-              placeholder="例如：GitHub、Gmail、Dashboard"
-              className={fieldClassName}
-              autoFocus
-            />
-          </div>
-
-          <div className="px-2">
             <label className="mb-1 flex items-center gap-1 text-sm font-medium text-slate-200">
               <Link className="h-4 w-4" />
               公网地址（WAN）
@@ -221,6 +209,18 @@ export default function CardEditForm() {
                 )}
               </div>
             </div>
+          </div>
+
+          <div className="px-2">
+            <label className="mb-1 block text-sm font-medium text-slate-200">卡片名称</label>
+            <input
+              type="text"
+              value={formData.title}
+              onChange={e => setFormData({ ...formData, title: e.target.value })}
+              placeholder="例如：GitHub、Gmail、Dashboard"
+              className={fieldClassName}
+              autoFocus
+            />
           </div>
 
           <div className="px-2">
