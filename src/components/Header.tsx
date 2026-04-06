@@ -14,7 +14,6 @@ import {
   type SnapshotMeta,
 } from '@/lib/api';
 import { lockBodyScroll, unlockBodyScroll } from '@/lib/scroll-lock';
-import WeatherWidget from './WeatherWidget';
 import {
   ArchiveRestore,
   History,
@@ -616,9 +615,8 @@ export default function Header() {
             </div>
           </div>
 
-          {/* 移动端：仅天气和搜索 */}
+          {/* 移动端：仅搜索 */}
           <div className="flex items-center gap-2 sm:hidden">
-            <WeatherWidget />
             <button
               onClick={openGlobalSearch}
               className="motion-btn-hover inline-flex h-9 w-9 items-center justify-center rounded-xl border border-white/15 bg-white/5 text-slate-200"
@@ -629,7 +627,6 @@ export default function Header() {
           </div>
 
           <div className="hidden items-center gap-2 sm:flex">
-            <WeatherWidget />
             <button
               onClick={openGlobalSearch}
               className="motion-btn-hover inline-flex h-10 cursor-pointer items-center gap-2 whitespace-nowrap rounded-xl border border-white/15 bg-white/5 px-3 text-sm text-slate-200 transition hover:bg-white/10"

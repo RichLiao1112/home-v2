@@ -2,6 +2,8 @@
 FROM node:20-alpine AS builder
 
 WORKDIR /app
+ARG NEXT_OUTPUT_STANDALONE=true
+ENV NEXT_OUTPUT_STANDALONE=${NEXT_OUTPUT_STANDALONE}
 
 # Copy package files
 COPY package.json yarn.lock* package-lock.json* pnpm-lock.yaml* ./
@@ -19,6 +21,19 @@ RUN mkdir -p /app/media/imgs
 
 # Build the application
 RUN npm run build
+
+# Prepare runtime payload based on build mode
+RUN mkdir -p /tmp/runtime/public && \
+  if [ -d /app/public ]; then cp -R /app/public/. /tmp/runtime/public/; fi && \
+  if [ "$NEXT_OUTPUT_STANDALONE" = "true" ]; then \
+    cp -R .next/standalone/. /tmp/runtime/ && \
+    mkdir -p /tmp/runtime/.next && \
+    cp -R .next/static /tmp/runtime/.next/static; \
+  else \
+    cp package.json /tmp/runtime/package.json && \
+    cp -R node_modules /tmp/runtime/node_modules && \
+    cp -R .next /tmp/runtime/.next; \
+  fi
 
 # Production stage
 FROM node:20-alpine AS runner
@@ -38,9 +53,8 @@ RUN apk add --no-cache nginx
 
 # Copy necessary files from builder
 # `public` directory may be absent in this project, create an empty fallback.
+COPY --from=builder --chown=nextjs:nodejs /tmp/runtime/ ./
 RUN mkdir -p ./public
-COPY --from=builder --chown=nextjs:nodejs /app/.next/standalone ./
-COPY --from=builder --chown=nextjs:nodejs /app/.next/static ./.next/static
 
 # Runtime writable dirs for mounted data/media
 RUN mkdir -p /app/data /app/media /app/assets /app/media-builtin && chown -R nextjs:nodejs /app/data /app/media /app/assets /app/media-builtin
