@@ -14,7 +14,7 @@ RUN set -eux; \
   npm config set fetch-retry-factor 2; \
   npm config set fetch-retry-mintimeout 10000; \
   npm config set fetch-retry-maxtimeout 120000; \
-  npm config set network-timeout 600000; \
+  npm config set fetch-timeout 600000; \
   if [ -f yarn.lock ]; then \
     install_cmd="yarn --frozen-lockfile"; \
   elif [ -f package-lock.json ]; then \
