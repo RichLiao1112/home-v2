@@ -4,14 +4,36 @@ FROM node:20-alpine AS builder
 WORKDIR /app
 ARG NEXT_OUTPUT_STANDALONE=true
 ENV NEXT_OUTPUT_STANDALONE=${NEXT_OUTPUT_STANDALONE}
+ARG NPM_REGISTRY=""
 
 # Copy package files
 COPY package.json yarn.lock* package-lock.json* pnpm-lock.yaml* ./
-RUN \
-  if [ -f yarn.lock ]; then yarn --frozen-lockfile; \
-  elif [ -f package-lock.json ]; then npm ci; \
-  elif [ -f pnpm-lock.yaml ]; then corepack enable pnpm && pnpm i --frozen-lockfile; \
-  else npm i; \
+RUN set -eux; \
+  if [ -n "$NPM_REGISTRY" ]; then npm config set registry "$NPM_REGISTRY"; fi; \
+  npm config set fetch-retries 5; \
+  npm config set fetch-retry-factor 2; \
+  npm config set fetch-retry-mintimeout 10000; \
+  npm config set fetch-retry-maxtimeout 120000; \
+  npm config set network-timeout 600000; \
+  if [ -f yarn.lock ]; then \
+    install_cmd="yarn --frozen-lockfile"; \
+  elif [ -f package-lock.json ]; then \
+    install_cmd="npm ci --no-audit --no-fund"; \
+  elif [ -f pnpm-lock.yaml ]; then \
+    install_cmd="corepack enable pnpm && pnpm i --frozen-lockfile"; \
+  else \
+    install_cmd="npm i --no-audit --no-fund"; \
+  fi; \
+  i=1; \
+  until [ "$i" -gt 3 ]; do \
+    sh -c "$install_cmd" && break; \
+    echo "Dependency install failed (attempt $i/3), retrying..."; \
+    i=$((i+1)); \
+    sleep 10; \
+  done; \
+  if [ "$i" -gt 3 ]; then \
+    echo "Dependency install failed after retries."; \
+    exit 1; \
   fi
 
 # Copy source code
